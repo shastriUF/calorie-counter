@@ -6,6 +6,7 @@ export default function RootLayout() {
       headerShown: false 
     }}>
     <Stack.Screen name="index" />
-    <Stack.Screen name="details" />
+    <Stack.Screen name="calories" />
+    <Stack.Screen name="ingredients" />
   </Stack>
 }
