@@ -175,7 +175,7 @@ export default function CaloriesScreen() {
             <ThemedView style={styles.listItem}>
               <ThemedText>{item.name}: {item.quantity} units, {item.calories} calories</ThemedText>
               <TouchableOpacity onPress={() => deleteConsumedItem(index)}>
-                <ThemedText style={styles.deleteText}>Delete</ThemedText>
+                <ThemedText style={styles.deleteText}>⛔️ Delete</ThemedText>
               </TouchableOpacity>
             </ThemedView>
           )}
@@ -218,7 +218,7 @@ const styles = StyleSheet.create({
   errorBanner: {
     backgroundColor: 'red',
     padding: 10,
-    marginBottom: 10,
+    marginBottom: 20,
     width: '100%',
     alignItems: 'center',
   },
@@ -233,7 +233,7 @@ const styles = StyleSheet.create({
     height: 40,
     borderColor: 'gray',
     borderWidth: 1,
-    marginBottom: 10,
+    marginBottom: 20,
     paddingHorizontal: 10,
     width: '80%',
   },
@@ -242,22 +242,27 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
   listItem: {
-    padding: 10,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 15,
     borderBottomWidth: 1,
     borderBottomColor: 'gray',
+    marginBottom: 10,
   },
   buttonRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 20,
+    marginTop: 30,
+    marginBottom: 20,
   },
   buttonText: {
     color: '#007BFF',
-    padding: 10,
+    padding: 15,
     backgroundColor: '#E0E0E0',
     borderRadius: 5,
     textAlign: 'center',
-    marginHorizontal: 5,
+    marginHorizontal: 10,
   },
   deleteText: {
     color: 'red',
