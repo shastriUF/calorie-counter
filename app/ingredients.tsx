@@ -1,13 +1,16 @@
 import { useState, useRef, useEffect } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, FlatList, Animated, Pressable, TouchableOpacity } from 'react-native';
+import { TextInput, Button, StyleSheet, FlatList, Animated, Pressable, TouchableOpacity, TouchableWithoutFeedback, Keyboard, useColorScheme } from 'react-native';
 import { Link } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { ThemedText } from '@/components/ThemedText';
+import { ThemedView } from '@/components/ThemedView';
 
 export default function IngredientsScreen() {
   const [ingredient, setIngredient] = useState('');
   const [calories, setCalories] = useState('');
   const [ingredients, setIngredients] = useState<{ name: string; calories: number }[]>([]);
   const scale = useRef(new Animated.Value(1)).current;
+  const scheme = useColorScheme();
 
   useEffect(() => {
     const loadIngredients = async () => {
@@ -71,61 +74,65 @@ export default function IngredientsScreen() {
   const isCaloriesValid = !isNaN(parseInt(calories)) && isFinite(parseInt(calories)) && parseInt(calories) > 0;
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.headerText}>Add Ingredient</Text>
-      <TextInput
-        style={styles.input}
-        value={ingredient}
-        onChangeText={setIngredient}
-        placeholder="Ingredient name"
-      />
-      <TextInput
-        style={styles.input}
-        value={calories}
-        onChangeText={setCalories}
-        keyboardType="numeric"
-        placeholder="Calories per unit"
-      />
-      <Button
-        title="Add"
-        onPress={addIngredient}
-        disabled={!ingredient || !calories || !isCaloriesValid}
-      />
-      <FlatList
-        data={ingredients}
-        keyExtractor={(item, index) => index.toString()}
-        renderItem={({ item, index }) => (
-          <View style={styles.listItem}>
-            <Text>{item.name}: {item.calories} calories</Text>
-            <TouchableOpacity onPress={() => deleteIngredient(index)}>
-              <Text style={styles.deleteText}>Delete</Text>
-            </TouchableOpacity>
-          </View>
-        )}
-      />
-      <View style={styles.buttonRow}>
-        <Link href="/" asChild>
-          <Pressable
-            onPressIn={handlePressIn}
-            onPressOut={handlePressOut}
-          >
-            <Animated.View style={{ transform: [{ scale }] }}>
-              <Text style={styles.buttonText}>Go Back Home</Text>
-            </Animated.View>
-          </Pressable>
-        </Link>
-        <Link href="/calories" asChild>
-          <Pressable
-            onPressIn={handlePressIn}
-            onPressOut={handlePressOut}
-          >
-            <Animated.View style={{ transform: [{ scale }] }}>
-              <Text style={styles.buttonText}>Track Calories</Text>
-            </Animated.View>
-          </Pressable>
-        </Link>
-      </View>
-    </View>
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <ThemedView style={styles.container}>
+        <ThemedText type="title" style={styles.headerText}>Add Ingredient</ThemedText>
+        <TextInput
+          style={[styles.input, scheme === 'dark' && styles.darkInput]}
+          value={ingredient}
+          onChangeText={setIngredient}
+          placeholder="Ingredient name"
+          placeholderTextColor={scheme === 'dark' ? '#ccc' : '#888'}
+        />
+        <TextInput
+          style={[styles.input, scheme === 'dark' && styles.darkInput]}
+          value={calories}
+          onChangeText={setCalories}
+          keyboardType="numeric"
+          placeholder="Calories per unit"
+          placeholderTextColor={scheme === 'dark' ? '#ccc' : '#888'}
+        />
+        <Button
+          title="Add"
+          onPress={addIngredient}
+          disabled={!ingredient || !calories || !isCaloriesValid}
+        />
+        <FlatList
+          data={ingredients}
+          keyExtractor={(item, index) => index.toString()}
+          renderItem={({ item, index }) => (
+            <ThemedView style={styles.listItem}>
+              <ThemedText>{item.name}: {item.calories} calories</ThemedText>
+              <TouchableOpacity onPress={() => deleteIngredient(index)}>
+                <ThemedText style={styles.deleteText}>Delete</ThemedText>
+              </TouchableOpacity>
+            </ThemedView>
+          )}
+        />
+        <ThemedView style={styles.buttonRow}>
+          <Link href="/" asChild>
+            <Pressable
+              onPressIn={handlePressIn}
+              onPressOut={handlePressOut}
+            >
+              <Animated.View style={{ transform: [{ scale }] }}>
+                <ThemedText style={styles.buttonText}>Go Back Home</ThemedText>
+              </Animated.View>
+            </Pressable>
+          </Link>
+          <Link href="/calories" asChild>
+            <Pressable
+              onPressIn={handlePressIn}
+              onPressOut={handlePressOut}
+            >
+              <Animated.View style={{ transform: [{ scale }] }}>
+                <ThemedText style={styles.buttonText}>Track Calories</ThemedText>
+              </Animated.View>
+            </Pressable>
+          </Link>
+        </ThemedView>
+      </ThemedView>
+    </TouchableWithoutFeedback>
   );
 }
 
@@ -138,8 +145,6 @@ const styles = StyleSheet.create({
     paddingTop: 100, // Add padding to the top
   },
   headerText: {
-    fontSize: 24,
-    fontWeight: 'bold',
     marginBottom: 20,
   },
   input: {
@@ -149,6 +154,10 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     paddingHorizontal: 10,
     width: '80%',
+  },
+  darkInput: {
+    borderColor: '#555',
+    color: '#fff',
   },
   listItem: {
     padding: 10,

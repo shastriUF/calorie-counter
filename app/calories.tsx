@@ -1,8 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, FlatList, Animated, Pressable, TouchableOpacity } from 'react-native';
+import { TextInput, Button, StyleSheet, FlatList, Animated, Pressable, TouchableOpacity, TouchableWithoutFeedback, Keyboard, useColorScheme } from 'react-native';
 import { Link } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { ThemedText } from '@/components/ThemedText';
+import { ThemedView } from '@/components/ThemedView';
 
 type Ingredient = {
   name: string;
@@ -19,6 +21,7 @@ export default function CaloriesScreen() {
   const [errorMessage, setErrorMessage] = useState('');
   const [selectedDate, setSelectedDate] = useState(new Date());
   const scale = useRef(new Animated.Value(1)).current;
+  const scheme = useColorScheme();
 
   useEffect(() => {
     const loadIngredients = async () => {
@@ -131,72 +134,76 @@ export default function CaloriesScreen() {
   const isQuantityValid = !isNaN(parseFloat(quantity)) && isFinite(parseFloat(quantity)) && parseFloat(quantity) > 0;
 
   return (
-    <View style={styles.container}>
-      {errorMessage ? (
-        <View style={styles.errorBanner}>
-          <Text style={styles.errorText}>{errorMessage}</Text>
-        </View>
-      ) : null}
-      <DateTimePicker
-        value={selectedDate}
-        mode="date"
-        display="default"
-        onChange={onDateChange}
-      />
-      <Text style={styles.headerText}>Total Calories: {totalCalories}</Text>
-      <TextInput
-        style={styles.input}
-        value={ingredient}
-        onChangeText={setIngredient}
-        placeholder="Enter ingredient"
-      />
-      <TextInput
-        style={styles.input}
-        value={quantity}
-        onChangeText={setQuantity}
-        keyboardType="numeric"
-        placeholder="Enter quantity"
-      />
-      <Button
-        title="Add"
-        onPress={addCalories}
-        disabled={!ingredient || !quantity || !isQuantityValid}
-      />
-      <FlatList
-        data={consumedItems}
-        keyExtractor={(item, index) => index.toString()}
-        renderItem={({ item, index }) => (
-          <View style={styles.listItem}>
-            <Text>{item.name}: {item.quantity} units, {item.calories} calories</Text>
-            <TouchableOpacity onPress={() => deleteConsumedItem(index)}>
-              <Text style={styles.deleteText}>Delete</Text>
-            </TouchableOpacity>
-          </View>
-        )}
-      />
-      <View style={styles.buttonRow}>
-        <Link href="/" asChild>
-          <Pressable
-            onPressIn={handlePressIn}
-            onPressOut={handlePressOut}
-          >
-            <Animated.View style={{ transform: [{ scale }] }}>
-              <Text style={styles.buttonText}>Go Back Home</Text>
-            </Animated.View>
-          </Pressable>
-        </Link>
-        <Link href="/ingredients" asChild>
-          <Pressable
-            onPressIn={handlePressIn}
-            onPressOut={handlePressOut}
-          >
-            <Animated.View style={{ transform: [{ scale }] }}>
-              <Text style={styles.buttonText}>Add Ingredients</Text>
-            </Animated.View>
-          </Pressable>
-        </Link>
-      </View>
-    </View>
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <ThemedView style={styles.container}>
+        {errorMessage ? (
+          <ThemedView style={styles.errorBanner}>
+            <ThemedText style={styles.errorText}>{errorMessage}</ThemedText>
+          </ThemedView>
+        ) : null}
+        <DateTimePicker
+          value={selectedDate}
+          mode="date"
+          display="default"
+          onChange={onDateChange}
+        />
+        <ThemedText type="title" style={styles.headerText}>Total Calories: {totalCalories}</ThemedText>
+        <TextInput
+          style={[styles.input, scheme === 'dark' && styles.darkInput]}
+          value={ingredient}
+          onChangeText={setIngredient}
+          placeholder="Enter ingredient"
+          placeholderTextColor={scheme === 'dark' ? '#ccc' : '#888'}
+        />
+        <TextInput
+          style={[styles.input, scheme === 'dark' && styles.darkInput]}
+          value={quantity}
+          onChangeText={setQuantity}
+          keyboardType="numeric"
+          placeholder="Enter quantity"
+          placeholderTextColor={scheme === 'dark' ? '#ccc' : '#888'}
+        />
+        <Button
+          title="Add"
+          onPress={addCalories}
+          disabled={!ingredient || !quantity || !isQuantityValid}
+        />
+        <FlatList
+          data={consumedItems}
+          keyExtractor={(item, index) => index.toString()}
+          renderItem={({ item, index }) => (
+            <ThemedView style={styles.listItem}>
+              <ThemedText>{item.name}: {item.quantity} units, {item.calories} calories</ThemedText>
+              <TouchableOpacity onPress={() => deleteConsumedItem(index)}>
+                <ThemedText style={styles.deleteText}>Delete</ThemedText>
+              </TouchableOpacity>
+            </ThemedView>
+          )}
+        />
+        <ThemedView style={styles.buttonRow}>
+          <Link href="/" asChild>
+            <Pressable
+              onPressIn={handlePressIn}
+              onPressOut={handlePressOut}
+            >
+              <Animated.View style={{ transform: [{ scale }] }}>
+                <ThemedText style={styles.buttonText}>Go Back Home</ThemedText>
+              </Animated.View>
+            </Pressable>
+          </Link>
+          <Link href="/ingredients" asChild>
+            <Pressable
+              onPressIn={handlePressIn}
+              onPressOut={handlePressOut}
+            >
+              <Animated.View style={{ transform: [{ scale }] }}>
+                <ThemedText style={styles.buttonText}>Add Ingredients</ThemedText>
+              </Animated.View>
+            </Pressable>
+          </Link>
+        </ThemedView>
+      </ThemedView>
+    </TouchableWithoutFeedback>
   );
 }
 
@@ -220,8 +227,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   headerText: {
-    fontSize: 24,
-    fontWeight: 'bold',
     marginBottom: 20,
   },
   input: {
@@ -231,6 +236,10 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     paddingHorizontal: 10,
     width: '80%',
+  },
+  darkInput: {
+    borderColor: '#555',
+    color: '#fff',
   },
   listItem: {
     padding: 10,
