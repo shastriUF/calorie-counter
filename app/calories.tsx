@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, FlatList, Animated, Pressable } from 'react-native';
+import { View, Text, TextInput, Button, StyleSheet, FlatList, Animated, Pressable, TouchableOpacity } from 'react-native';
 import { Link } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 type Ingredient = {
   name: string;
@@ -16,8 +17,8 @@ export default function CaloriesScreen() {
   const [consumedItems, setConsumedItems] = useState<Ingredient[]>([]);
   const [ingredientsData, setIngredientsData] = useState<Ingredient[]>([]);
   const [errorMessage, setErrorMessage] = useState('');
+  const [selectedDate, setSelectedDate] = useState(new Date());
   const scale = useRef(new Animated.Value(1)).current;
-  const currentDate = new Date().toLocaleDateString();
 
   useEffect(() => {
     const loadIngredients = async () => {
@@ -33,9 +34,11 @@ export default function CaloriesScreen() {
 
     const loadTotalCalories = async () => {
       try {
-        const storedCalories = await AsyncStorage.getItem(`calories_${currentDate}`);
+        const storedCalories = await AsyncStorage.getItem(`calories_${selectedDate.toLocaleDateString()}`);
         if (storedCalories) {
           setTotalCalories(parseInt(storedCalories));
+        } else {
+          setTotalCalories(0);
         }
       } catch (error) {
         console.error('Failed to load total calories', error);
@@ -44,9 +47,11 @@ export default function CaloriesScreen() {
 
     const loadConsumedItems = async () => {
       try {
-        const storedItems = await AsyncStorage.getItem(`consumedItems_${currentDate}`);
+        const storedItems = await AsyncStorage.getItem(`consumedItems_${selectedDate.toLocaleDateString()}`);
         if (storedItems) {
           setConsumedItems(JSON.parse(storedItems));
+        } else {
+          setConsumedItems([]);
         }
       } catch (error) {
         console.error('Failed to load consumed items', error);
@@ -56,11 +61,11 @@ export default function CaloriesScreen() {
     loadIngredients();
     loadTotalCalories();
     loadConsumedItems();
-  }, [currentDate]);
+  }, [selectedDate]);
 
   const saveTotalCalories = async (calories: number) => {
     try {
-      await AsyncStorage.setItem(`calories_${currentDate}`, calories.toString());
+      await AsyncStorage.setItem(`calories_${selectedDate.toLocaleDateString()}`, calories.toString());
     } catch (error) {
       console.error('Failed to save total calories', error);
     }
@@ -68,7 +73,7 @@ export default function CaloriesScreen() {
 
   const saveConsumedItems = async (items: Ingredient[]) => {
     try {
-      await AsyncStorage.setItem(`consumedItems_${currentDate}`, JSON.stringify(items));
+      await AsyncStorage.setItem(`consumedItems_${selectedDate.toLocaleDateString()}`, JSON.stringify(items));
     } catch (error) {
       console.error('Failed to save consumed items', error);
     }
@@ -93,6 +98,15 @@ export default function CaloriesScreen() {
     setQuantity('');
   };
 
+  const deleteConsumedItem = (name: string) => {
+    const newConsumedItems = consumedItems.filter(item => item.name.toLowerCase() !== name.toLowerCase());
+    setConsumedItems(newConsumedItems);
+    saveConsumedItems(newConsumedItems);
+    const totalCalories = newConsumedItems.reduce((sum, item) => sum + item.calories, 0);
+    setTotalCalories(totalCalories);
+    saveTotalCalories(totalCalories);
+  };
+
   const handlePressIn = () => {
     Animated.spring(scale, {
       toValue: 0.95,
@@ -107,6 +121,14 @@ export default function CaloriesScreen() {
     }).start();
   };
 
+  const onDateChange = (event: any, selectedDate: Date | undefined) => {
+    if (selectedDate) {
+      setSelectedDate(selectedDate);
+    }
+  };
+
+  const isQuantityValid = !isNaN(parseFloat(quantity)) && isFinite(parseFloat(quantity)) && parseFloat(quantity) > 0;
+
   return (
     <View style={styles.container}>
       {errorMessage ? (
@@ -114,7 +136,12 @@ export default function CaloriesScreen() {
           <Text style={styles.errorText}>{errorMessage}</Text>
         </View>
       ) : null}
-      <Text style={styles.dateText}>{currentDate}</Text>
+      <DateTimePicker
+        value={selectedDate}
+        mode="date"
+        display="default"
+        onChange={onDateChange}
+      />
       <Text style={styles.headerText}>Total Calories: {totalCalories}</Text>
       <TextInput
         style={styles.input}
@@ -129,13 +156,20 @@ export default function CaloriesScreen() {
         keyboardType="numeric"
         placeholder="Enter quantity"
       />
-      <Button title="Add" onPress={addCalories} />
+      <Button
+        title="Add"
+        onPress={addCalories}
+        disabled={!ingredient || !quantity || !isQuantityValid}
+      />
       <FlatList
         data={consumedItems}
         keyExtractor={(item, index) => index.toString()}
         renderItem={({ item }) => (
           <View style={styles.listItem}>
             <Text>{item.name}: {item.quantity} units, {item.calories} calories</Text>
+            <TouchableOpacity onPress={() => deleteConsumedItem(item.name)}>
+              <Text style={styles.deleteText}>Delete</Text>
+            </TouchableOpacity>
           </View>
         )}
       />
@@ -184,10 +218,6 @@ const styles = StyleSheet.create({
     color: 'white',
     fontWeight: 'bold',
   },
-  dateText: {
-    fontSize: 18,
-    marginBottom: 10,
-  },
   headerText: {
     fontSize: 24,
     fontWeight: 'bold',
@@ -218,5 +248,9 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     textAlign: 'center',
     marginHorizontal: 5,
+  },
+  deleteText: {
+    color: 'red',
+    marginLeft: 10,
   },
 });

@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, FlatList, Animated, Pressable } from 'react-native';
+import { View, Text, TextInput, Button, StyleSheet, FlatList, Animated, Pressable, TouchableOpacity } from 'react-native';
 import { Link } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -33,11 +33,24 @@ export default function IngredientsScreen() {
   };
 
   const addIngredient = () => {
-    const newIngredients = [...ingredients, { name: ingredient, calories: parseInt(calories) }];
+    const existingIngredientIndex = ingredients.findIndex(item => item.name.toLowerCase() === ingredient.toLowerCase());
+    let newIngredients;
+    if (existingIngredientIndex !== -1) {
+      newIngredients = [...ingredients];
+      newIngredients[existingIngredientIndex] = { name: ingredient, calories: parseInt(calories) };
+    } else {
+      newIngredients = [...ingredients, { name: ingredient, calories: parseInt(calories) }];
+    }
     setIngredients(newIngredients);
     saveIngredients(newIngredients);
     setIngredient('');
     setCalories('');
+  };
+
+  const deleteIngredient = (name: string) => {
+    const newIngredients = ingredients.filter(item => item.name.toLowerCase() !== name.toLowerCase());
+    setIngredients(newIngredients);
+    saveIngredients(newIngredients);
   };
 
   const handlePressIn = () => {
@@ -53,6 +66,8 @@ export default function IngredientsScreen() {
       useNativeDriver: true,
     }).start();
   };
+
+  const isCaloriesValid = !isNaN(parseInt(calories)) && isFinite(parseInt(calories)) && parseInt(calories) > 0;
 
   return (
     <View style={styles.container}>
@@ -70,13 +85,20 @@ export default function IngredientsScreen() {
         keyboardType="numeric"
         placeholder="Calories per unit"
       />
-      <Button title="Add" onPress={addIngredient} />
+      <Button
+        title="Add"
+        onPress={addIngredient}
+        disabled={!ingredient || !calories || !isCaloriesValid}
+      />
       <FlatList
         data={ingredients}
         keyExtractor={(item, index) => index.toString()}
         renderItem={({ item }) => (
           <View style={styles.listItem}>
             <Text>{item.name}: {item.calories} calories</Text>
+            <TouchableOpacity onPress={() => deleteIngredient(item.name)}>
+              <Text style={styles.deleteText}>Delete</Text>
+            </TouchableOpacity>
           </View>
         )}
       />
@@ -144,5 +166,9 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     textAlign: 'center',
     marginHorizontal: 5,
+  },
+  deleteText: {
+    color: 'red',
+    marginLeft: 10,
   },
 });
