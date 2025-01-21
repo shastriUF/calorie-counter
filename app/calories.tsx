@@ -98,8 +98,9 @@ export default function CaloriesScreen() {
     setQuantity('');
   };
 
-  const deleteConsumedItem = (name: string) => {
-    const newConsumedItems = consumedItems.filter(item => item.name.toLowerCase() !== name.toLowerCase());
+  const deleteConsumedItem = (index: number) => {
+    const newConsumedItems = [...consumedItems];
+    newConsumedItems.splice(index, 1);
     setConsumedItems(newConsumedItems);
     saveConsumedItems(newConsumedItems);
     const totalCalories = newConsumedItems.reduce((sum, item) => sum + item.calories, 0);
@@ -164,10 +165,10 @@ export default function CaloriesScreen() {
       <FlatList
         data={consumedItems}
         keyExtractor={(item, index) => index.toString()}
-        renderItem={({ item }) => (
+        renderItem={({ item, index }) => (
           <View style={styles.listItem}>
             <Text>{item.name}: {item.quantity} units, {item.calories} calories</Text>
-            <TouchableOpacity onPress={() => deleteConsumedItem(item.name)}>
+            <TouchableOpacity onPress={() => deleteConsumedItem(index)}>
               <Text style={styles.deleteText}>Delete</Text>
             </TouchableOpacity>
           </View>

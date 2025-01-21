@@ -47,8 +47,9 @@ export default function IngredientsScreen() {
     setCalories('');
   };
 
-  const deleteIngredient = (name: string) => {
-    const newIngredients = ingredients.filter(item => item.name.toLowerCase() !== name.toLowerCase());
+  const deleteIngredient = (index: number) => {
+    const newIngredients = [...ingredients];
+    newIngredients.splice(index, 1);
     setIngredients(newIngredients);
     saveIngredients(newIngredients);
   };
@@ -93,10 +94,10 @@ export default function IngredientsScreen() {
       <FlatList
         data={ingredients}
         keyExtractor={(item, index) => index.toString()}
-        renderItem={({ item }) => (
+        renderItem={({ item, index }) => (
           <View style={styles.listItem}>
             <Text>{item.name}: {item.calories} calories</Text>
-            <TouchableOpacity onPress={() => deleteIngredient(item.name)}>
+            <TouchableOpacity onPress={() => deleteIngredient(index)}>
               <Text style={styles.deleteText}>Delete</Text>
             </TouchableOpacity>
           </View>
