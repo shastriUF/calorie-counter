@@ -1,11 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
-import { TextInput, Button, StyleSheet, FlatList, Animated, Pressable, TouchableWithoutFeedback, Keyboard, useColorScheme } from 'react-native';
+import { TextInput, Button, StyleSheet, FlatList, Animated, Pressable, TouchableWithoutFeedback, Keyboard, useColorScheme, View } from 'react-native';
 import { Link } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
-import { ConsumedItem } from './components/ConsumedItem';
+import ConsumedItem from './components/ConsumedItem';
 
 type Ingredient = {
   name: string;
@@ -19,6 +19,7 @@ export default function CaloriesScreen() {
   const [totalCalories, setTotalCalories] = useState(0);
   const [consumedItems, setConsumedItems] = useState<Ingredient[]>([]);
   const [ingredientsData, setIngredientsData] = useState<Ingredient[]>([]);
+  const [filteredIngredients, setFilteredIngredients] = useState<Ingredient[]>([]);
   const [errorMessage, setErrorMessage] = useState('');
   const [selectedDate, setSelectedDate] = useState(new Date());
   const scale = useRef(new Animated.Value(1)).current;
@@ -29,7 +30,8 @@ export default function CaloriesScreen() {
       try {
         const storedIngredients = await AsyncStorage.getItem('ingredients');
         if (storedIngredients) {
-          setIngredientsData(JSON.parse(storedIngredients));
+          const parsedIngredients = JSON.parse(storedIngredients);
+          setIngredientsData(parsedIngredients);
         }
       } catch (error) {
         console.error('Failed to load ingredients', error);
@@ -134,6 +136,18 @@ export default function CaloriesScreen() {
 
   const isQuantityValid = !isNaN(parseFloat(quantity)) && isFinite(parseFloat(quantity)) && parseFloat(quantity) > 0;
 
+  const handleIngredientChange = (text: string) => {
+    setIngredient(text);
+    if (text) {
+      const filtered = ingredientsData.filter(ingredient =>
+        ingredient.name.toLowerCase().includes(text.toLowerCase())
+      );
+      setFilteredIngredients(filtered);
+    } else {
+      setFilteredIngredients([]);
+    }
+  };
+
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <ThemedView style={styles.container}>
@@ -152,10 +166,19 @@ export default function CaloriesScreen() {
         <TextInput
           style={[styles.input, scheme === 'dark' && styles.darkInput]}
           value={ingredient}
-          onChangeText={setIngredient}
+          onChangeText={handleIngredientChange}
           placeholder="Enter ingredient"
           placeholderTextColor={scheme === 'dark' ? '#ccc' : '#888'}
         />
+        {filteredIngredients.length > 0 && (
+          <View style={styles.suggestionsContainer}>
+            {filteredIngredients.map((item, index) => (
+              <Pressable key={index} onPress={() => setIngredient(item.name)}>
+                <ThemedText style={styles.suggestionText}>{item.name}</ThemedText>
+              </Pressable>
+            ))}
+          </View>
+        )}
         <TextInput
           style={[styles.input, scheme === 'dark' && styles.darkInput]}
           value={quantity}
@@ -242,6 +265,23 @@ const styles = StyleSheet.create({
   darkInput: {
     borderColor: '#555',
     color: '#fff',
+  },
+  suggestionsContainer: {
+    width: '80%',
+    backgroundColor: '#fff',
+    borderColor: 'gray',
+    borderWidth: 1,
+    marginBottom: 20,
+  },
+  suggestionText: {
+    padding: 10,
+  },
+  dropdownContainer: {
+    width: '80%',
+    borderColor: 'gray',
+  },
+  darkDropdownContainer: {
+    borderColor: '#555',
   },
   buttonRow: {
     flexDirection: 'row',

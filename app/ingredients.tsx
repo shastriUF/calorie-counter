@@ -4,7 +4,7 @@ import { Link } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
-import { IngredientItem } from './components/IngredientItem';
+import IngredientItem from './components/IngredientItem';
 
 export default function IngredientsScreen() {
   const [ingredient, setIngredient] = useState('');

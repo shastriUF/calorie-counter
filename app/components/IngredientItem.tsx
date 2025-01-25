@@ -8,7 +8,7 @@ type IngredientItemProps = {
   onDelete: () => void;
 };
 
-export function IngredientItem({ name, calories, onDelete }: IngredientItemProps) {
+export default function IngredientItem({ name, calories, onDelete }: IngredientItemProps) {
   return (
     <ThemedView style={styles.listItem}>
       <ThemedText>{name}: {calories} calories</ThemedText>

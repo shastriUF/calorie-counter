@@ -9,7 +9,7 @@ type ConsumedItemProps = {
   onDelete: () => void;
 };
 
-export function ConsumedItem({ name, quantity, calories, onDelete }: ConsumedItemProps) {
+export default function ConsumedItem({ name, quantity, calories, onDelete }: ConsumedItemProps) {
   return (
     <ThemedView style={styles.listItem}>
       <ThemedText>{name}: {quantity} units, {calories} calories</ThemedText>
