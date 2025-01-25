@@ -229,6 +229,7 @@ const styles = StyleSheet.create({
   },
   headerText: {
     marginBottom: 20,
+    paddingTop: 20, // Add padding between the date and the total calories line
   },
   input: {
     height: 40,
