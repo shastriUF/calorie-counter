@@ -1,6 +1,7 @@
 import { TouchableOpacity, StyleSheet } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import { Ionicons } from '@expo/vector-icons';
 
 type ConsumedItemProps = {
   name: string;
@@ -14,7 +15,9 @@ export default function ConsumedItem({ name, quantity, calories, onDelete }: Con
     <ThemedView style={styles.listItem}>
       <ThemedText>{name}: {quantity} units, {calories} calories</ThemedText>
       <TouchableOpacity onPress={onDelete}>
-        <ThemedText style={styles.deleteText}>⛔️ Delete</ThemedText>
+      <ThemedText style={styles.deleteText}>
+          <Ionicons name="trash" /> Delete
+        </ThemedText>
       </TouchableOpacity>
     </ThemedView>
   );

@@ -159,6 +159,15 @@ export default function CaloriesScreen() {
     setFilteredIngredients([]);
   };
 
+  const refreshCalories = () => {
+    const newTotalCalories = consumedItems.reduce((sum, item) => {
+      const ingredientData = ingredientsData.find(ingredient => ingredient.name.toLowerCase() === item.name.toLowerCase());
+      return sum + (ingredientData ? ingredientData.calories * item.quantity : 0);
+    }, 0);
+    setTotalCalories(newTotalCalories);
+    saveTotalCalories(newTotalCalories);
+  };
+
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <ThemedView style={[styles.container, { backgroundColor }]}>
@@ -203,6 +212,10 @@ export default function CaloriesScreen() {
           title="Add"
           onPress={addCalories}
           disabled={!ingredient || !quantity || !isQuantityValid}
+        />
+        <Button
+          title="Refresh Calories"
+          onPress={refreshCalories}
         />
         <FlatList
           data={consumedItems}

@@ -1,6 +1,7 @@
 import { TouchableOpacity, StyleSheet } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import { Ionicons } from '@expo/vector-icons';
 
 type IngredientItemProps = {
   name: string;
@@ -13,7 +14,9 @@ export default function IngredientItem({ name, calories, onDelete }: IngredientI
     <ThemedView style={styles.listItem}>
       <ThemedText>{name}: {calories} calories</ThemedText>
       <TouchableOpacity onPress={onDelete}>
-        <ThemedText style={styles.deleteText}>⛔️ Delete</ThemedText>
+        <ThemedText style={styles.deleteText}>
+          <Ionicons name="trash" /> Delete
+        </ThemedText>
       </TouchableOpacity>
     </ThemedView>
   );
