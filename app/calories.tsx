@@ -7,6 +7,8 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import ConsumedItem from './components/ConsumedItem';
 import { useThemeColor } from '@/hooks/useThemeColor';
+import { Ionicons } from '@expo/vector-icons';
+import { StatusBar } from 'expo-status-bar';
 
 type Ingredient = {
   name: string;
@@ -160,6 +162,7 @@ export default function CaloriesScreen() {
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <ThemedView style={[styles.container, { backgroundColor }]}>
+        <StatusBar />
         {errorMessage ? (
           <ThemedView style={styles.errorBanner}>
             <ThemedText style={styles.errorText}>{errorMessage}</ThemedText>
@@ -221,7 +224,9 @@ export default function CaloriesScreen() {
               onPressOut={handlePressOut}
             >
               <Animated.View style={{ transform: [{ scale }] }}>
-                <ThemedText style={styles.buttonText}>Go Back Home</ThemedText>
+                <ThemedText style={styles.buttonText}>
+                  <Ionicons name="home-outline" size={16} />
+                </ThemedText>
               </Animated.View>
             </Pressable>
           </Link>
@@ -231,7 +236,9 @@ export default function CaloriesScreen() {
               onPressOut={handlePressOut}
             >
               <Animated.View style={{ transform: [{ scale }] }}>
-                <ThemedText style={styles.buttonText}>Add Ingredients</ThemedText>
+                <ThemedText style={styles.buttonText}>
+                  <Ionicons name="add-circle-outline" size={16} /> Add Ingredients
+                </ThemedText>
               </Animated.View>
             </Pressable>
           </Link>
@@ -270,11 +277,13 @@ const styles = StyleSheet.create({
     marginBottom: 0,
     paddingHorizontal: 10,
     width: '80%',
+    borderRadius: 10, // Rounded corners
   },
   suggestionsContainer: {
     width: '70%',
     borderWidth: 0.5,
     marginBottom: 20,
+    borderRadius: 10, // Rounded corners
   },
   suggestionText: {
     padding: 5,
@@ -289,7 +298,7 @@ const styles = StyleSheet.create({
     color: '#007BFF',
     padding: 15,
     backgroundColor: '#E0E0E0',
-    borderRadius: 5,
+    borderRadius: 10, // Rounded corners
     textAlign: 'center',
     marginHorizontal: 10,
   },

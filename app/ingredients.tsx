@@ -6,6 +6,8 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import IngredientItem from './components/IngredientItem';
 import { useThemeColor } from '@/hooks/useThemeColor';
+import { Ionicons } from '@expo/vector-icons';
+import { StatusBar } from 'expo-status-bar';
 
 export default function IngredientsScreen() {
   const [ingredient, setIngredient] = useState('');
@@ -81,6 +83,7 @@ export default function IngredientsScreen() {
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <ThemedView style={[styles.container, { backgroundColor }]}>
+        <StatusBar />
         <ThemedText type="title" style={styles.headerText}>Add Ingredient</ThemedText>
         <TextInput
           style={[styles.input, { borderColor, color: textColor }]}
@@ -112,6 +115,7 @@ export default function IngredientsScreen() {
               onDelete={() => deleteIngredient(index)}
             />
           )}
+          contentContainerStyle={{ paddingTop: 0 }}
         />
         <ThemedView style={styles.buttonRow}>
           <Link href="/" asChild>
@@ -120,7 +124,9 @@ export default function IngredientsScreen() {
               onPressOut={handlePressOut}
             >
               <Animated.View style={{ transform: [{ scale }] }}>
-                <ThemedText style={styles.buttonText}>Go Back Home</ThemedText>
+                <ThemedText style={styles.buttonText}>
+                  <Ionicons name="home-outline" size={16} />
+                </ThemedText>
               </Animated.View>
             </Pressable>
           </Link>
@@ -130,7 +136,9 @@ export default function IngredientsScreen() {
               onPressOut={handlePressOut}
             >
               <Animated.View style={{ transform: [{ scale }] }}>
-                <ThemedText style={styles.buttonText}>Track Calories</ThemedText>
+                <ThemedText style={styles.buttonText}>
+                  <Ionicons name="stats-chart-outline" size={16} /> Track Calories
+                </ThemedText>
               </Animated.View>
             </Pressable>
           </Link>
@@ -150,6 +158,7 @@ const styles = StyleSheet.create({
   },
   headerText: {
     marginBottom: 20,
+    paddingTop: 20, // Add padding between the date and the total calories line
   },
   input: {
     height: 40,
@@ -157,6 +166,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     paddingHorizontal: 10,
     width: '80%',
+    borderRadius: 10, // Rounded corners
   },
   buttonRow: {
     flexDirection: 'row',
@@ -168,7 +178,7 @@ const styles = StyleSheet.create({
     color: '#007BFF',
     padding: 15,
     backgroundColor: '#E0E0E0',
-    borderRadius: 5,
+    borderRadius: 10, // Rounded corners
     textAlign: 'center',
     marginHorizontal: 10,
   },

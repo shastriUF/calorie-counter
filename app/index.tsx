@@ -21,7 +21,6 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.container}>
-      <Text>Home</Text>
       <Link href="/calories" asChild>
         <Pressable
           style={styles.button}
