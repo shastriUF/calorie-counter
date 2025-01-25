@@ -6,6 +6,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import ConsumedItem from './components/ConsumedItem';
+import { useThemeColor } from '@/hooks/useThemeColor';
 
 type Ingredient = {
   name: string;
@@ -24,6 +25,9 @@ export default function CaloriesScreen() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const scale = useRef(new Animated.Value(1)).current;
   const scheme = useColorScheme();
+  const backgroundColor = useThemeColor({}, 'background');
+  const textColor = useThemeColor({}, 'text');
+  const borderColor = useThemeColor({}, 'border');
 
   useEffect(() => {
     const loadIngredients = async () => {
@@ -148,9 +152,14 @@ export default function CaloriesScreen() {
     }
   };
 
+  const handleIngredientSelect = (name: string) => {
+    setIngredient(name);
+    setFilteredIngredients([]);
+  };
+
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-      <ThemedView style={styles.container}>
+      <ThemedView style={[styles.container, { backgroundColor }]}>
         {errorMessage ? (
           <ThemedView style={styles.errorBanner}>
             <ThemedText style={styles.errorText}>{errorMessage}</ThemedText>
@@ -164,23 +173,23 @@ export default function CaloriesScreen() {
         />
         <ThemedText type="title" style={styles.headerText}>Total Calories: {totalCalories}</ThemedText>
         <TextInput
-          style={[styles.input, scheme === 'dark' && styles.darkInput]}
+          style={[styles.input, { borderColor, color: textColor }]}
           value={ingredient}
           onChangeText={handleIngredientChange}
           placeholder="Enter ingredient"
           placeholderTextColor={scheme === 'dark' ? '#ccc' : '#888'}
         />
         {filteredIngredients.length > 0 && (
-          <View style={styles.suggestionsContainer}>
+          <View style={[styles.suggestionsContainer, { backgroundColor, borderColor }]}>
             {filteredIngredients.map((item, index) => (
-              <Pressable key={index} onPress={() => setIngredient(item.name)}>
+              <Pressable key={index} onPress={() => handleIngredientSelect(item.name)}>
                 <ThemedText style={styles.suggestionText}>{item.name}</ThemedText>
               </Pressable>
             ))}
           </View>
         )}
         <TextInput
-          style={[styles.input, scheme === 'dark' && styles.darkInput]}
+          style={[styles.input, { borderColor, color: textColor }]}
           value={quantity}
           onChangeText={setQuantity}
           keyboardType="numeric"
@@ -203,6 +212,7 @@ export default function CaloriesScreen() {
               onDelete={() => deleteConsumedItem(index)}
             />
           )}
+          contentContainerStyle={{ paddingTop: 0 }}
         />
         <ThemedView style={styles.buttonRow}>
           <Link href="/" asChild>
@@ -256,32 +266,18 @@ const styles = StyleSheet.create({
   },
   input: {
     height: 40,
-    borderColor: 'gray',
     borderWidth: 1,
-    marginBottom: 20,
+    marginBottom: 0,
     paddingHorizontal: 10,
     width: '80%',
   },
-  darkInput: {
-    borderColor: '#555',
-    color: '#fff',
-  },
   suggestionsContainer: {
-    width: '80%',
-    backgroundColor: '#fff',
-    borderColor: 'gray',
-    borderWidth: 1,
+    width: '70%',
+    borderWidth: 0.5,
     marginBottom: 20,
   },
   suggestionText: {
-    padding: 10,
-  },
-  dropdownContainer: {
-    width: '80%',
-    borderColor: 'gray',
-  },
-  darkDropdownContainer: {
-    borderColor: '#555',
+    padding: 5,
   },
   buttonRow: {
     flexDirection: 'row',

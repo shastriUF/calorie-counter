@@ -5,6 +5,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import IngredientItem from './components/IngredientItem';
+import { useThemeColor } from '@/hooks/useThemeColor';
 
 export default function IngredientsScreen() {
   const [ingredient, setIngredient] = useState('');
@@ -12,6 +13,9 @@ export default function IngredientsScreen() {
   const [ingredients, setIngredients] = useState<{ name: string; calories: number }[]>([]);
   const scale = useRef(new Animated.Value(1)).current;
   const scheme = useColorScheme();
+  const backgroundColor = useThemeColor({}, 'background');
+  const textColor = useThemeColor({}, 'text');
+  const borderColor = useThemeColor({}, 'border');
 
   useEffect(() => {
     const loadIngredients = async () => {
@@ -76,17 +80,17 @@ export default function IngredientsScreen() {
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-      <ThemedView style={styles.container}>
+      <ThemedView style={[styles.container, { backgroundColor }]}>
         <ThemedText type="title" style={styles.headerText}>Add Ingredient</ThemedText>
         <TextInput
-          style={[styles.input, scheme === 'dark' && styles.darkInput]}
+          style={[styles.input, { borderColor, color: textColor }]}
           value={ingredient}
           onChangeText={setIngredient}
           placeholder="Ingredient name"
           placeholderTextColor={scheme === 'dark' ? '#ccc' : '#888'}
         />
         <TextInput
-          style={[styles.input, scheme === 'dark' && styles.darkInput]}
+          style={[styles.input, { borderColor, color: textColor }]}
           value={calories}
           onChangeText={setCalories}
           keyboardType="numeric"
@@ -149,15 +153,10 @@ const styles = StyleSheet.create({
   },
   input: {
     height: 40,
-    borderColor: 'gray',
     borderWidth: 1,
     marginBottom: 20,
     paddingHorizontal: 10,
     width: '80%',
-  },
-  darkInput: {
-    borderColor: '#555',
-    color: '#fff',
   },
   buttonRow: {
     flexDirection: 'row',
