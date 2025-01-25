@@ -13,6 +13,7 @@ export default function IngredientsScreen() {
   const [ingredient, setIngredient] = useState('');
   const [calories, setCalories] = useState('');
   const [ingredients, setIngredients] = useState<{ name: string; calories: number }[]>([]);
+  const [filteredIngredients, setFilteredIngredients] = useState<{ name: string; calories: number }[]>([]);
   const scale = useRef(new Animated.Value(1)).current;
   const scheme = useColorScheme();
   const backgroundColor = useThemeColor({}, 'background');
@@ -24,7 +25,9 @@ export default function IngredientsScreen() {
       try {
         const storedIngredients = await AsyncStorage.getItem('ingredients');
         if (storedIngredients) {
-          setIngredients(JSON.parse(storedIngredients));
+          const parsedIngredients = JSON.parse(storedIngredients);
+          setIngredients(parsedIngredients);
+          setFilteredIngredients(parsedIngredients);
         }
       } catch (error) {
         console.error('Failed to load ingredients', error);
@@ -52,6 +55,7 @@ export default function IngredientsScreen() {
       newIngredients = [...ingredients, { name: ingredient, calories: parseInt(calories) }];
     }
     setIngredients(newIngredients);
+    setFilteredIngredients(newIngredients);
     saveIngredients(newIngredients);
     setIngredient('');
     setCalories('');
@@ -61,6 +65,7 @@ export default function IngredientsScreen() {
     const newIngredients = [...ingredients];
     newIngredients.splice(index, 1);
     setIngredients(newIngredients);
+    setFilteredIngredients(newIngredients);
     saveIngredients(newIngredients);
   };
 
@@ -80,6 +85,18 @@ export default function IngredientsScreen() {
 
   const isCaloriesValid = !isNaN(parseInt(calories)) && isFinite(parseInt(calories)) && parseInt(calories) > 0;
 
+  const handleIngredientChange = (text: string) => {
+    setIngredient(text);
+    if (text) {
+      const filtered = ingredients.filter(ingredient =>
+        ingredient.name.toLowerCase().includes(text.toLowerCase())
+      );
+      setFilteredIngredients(filtered);
+    } else {
+      setFilteredIngredients(ingredients);
+    }
+  };
+
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <ThemedView style={[styles.container, { backgroundColor }]}>
@@ -88,7 +105,7 @@ export default function IngredientsScreen() {
         <TextInput
           style={[styles.input, { borderColor, color: textColor }]}
           value={ingredient}
-          onChangeText={setIngredient}
+          onChangeText={handleIngredientChange}
           placeholder="Ingredient name"
           placeholderTextColor={scheme === 'dark' ? '#ccc' : '#888'}
         />
@@ -106,7 +123,7 @@ export default function IngredientsScreen() {
           disabled={!ingredient || !calories || !isCaloriesValid}
         />
         <FlatList
-          data={ingredients}
+          data={filteredIngredients}
           keyExtractor={(item, index) => index.toString()}
           renderItem={({ item, index }) => (
             <IngredientItem
