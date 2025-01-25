@@ -1,9 +1,10 @@
 import { useState, useRef, useEffect } from 'react';
-import { TextInput, Button, StyleSheet, FlatList, Animated, Pressable, TouchableOpacity, TouchableWithoutFeedback, Keyboard, useColorScheme } from 'react-native';
+import { TextInput, Button, StyleSheet, FlatList, Animated, Pressable, TouchableWithoutFeedback, Keyboard, useColorScheme } from 'react-native';
 import { Link } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import { IngredientItem } from './components/IngredientItem';
 
 export default function IngredientsScreen() {
   const [ingredient, setIngredient] = useState('');
@@ -101,12 +102,11 @@ export default function IngredientsScreen() {
           data={ingredients}
           keyExtractor={(item, index) => index.toString()}
           renderItem={({ item, index }) => (
-            <ThemedView style={styles.listItem}>
-              <ThemedText>{item.name}: {item.calories} calories</ThemedText>
-              <TouchableOpacity onPress={() => deleteIngredient(index)}>
-                <ThemedText style={styles.deleteText}>⛔️ Delete</ThemedText>
-              </TouchableOpacity>
-            </ThemedView>
+            <IngredientItem
+              name={item.name}
+              calories={item.calories}
+              onDelete={() => deleteIngredient(index)}
+            />
           )}
         />
         <ThemedView style={styles.buttonRow}>
@@ -159,15 +159,6 @@ const styles = StyleSheet.create({
     borderColor: '#555',
     color: '#fff',
   },
-  listItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: 'gray',
-    marginBottom: 10,
-  },
   buttonRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -181,9 +172,5 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     textAlign: 'center',
     marginHorizontal: 10,
-  },
-  deleteText: {
-    color: 'red',
-    marginLeft: 10,
   },
 });

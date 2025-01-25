@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
-import { TextInput, Button, StyleSheet, FlatList, Animated, Pressable, TouchableOpacity, TouchableWithoutFeedback, Keyboard, useColorScheme } from 'react-native';
+import { TextInput, Button, StyleSheet, FlatList, Animated, Pressable, TouchableWithoutFeedback, Keyboard, useColorScheme } from 'react-native';
 import { Link } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import { ConsumedItem } from './components/ConsumedItem';
 
 type Ingredient = {
   name: string;
@@ -172,12 +173,12 @@ export default function CaloriesScreen() {
           data={consumedItems}
           keyExtractor={(item, index) => index.toString()}
           renderItem={({ item, index }) => (
-            <ThemedView style={styles.listItem}>
-              <ThemedText>{item.name}: {item.quantity} units, {item.calories} calories</ThemedText>
-              <TouchableOpacity onPress={() => deleteConsumedItem(index)}>
-                <ThemedText style={styles.deleteText}>⛔️ Delete</ThemedText>
-              </TouchableOpacity>
-            </ThemedView>
+            <ConsumedItem
+              name={item.name}
+              quantity={item.quantity}
+              calories={item.calories}
+              onDelete={() => deleteConsumedItem(index)}
+            />
           )}
         />
         <ThemedView style={styles.buttonRow}>
@@ -241,15 +242,6 @@ const styles = StyleSheet.create({
     borderColor: '#555',
     color: '#fff',
   },
-  listItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: 'gray',
-    marginBottom: 10,
-  },
   buttonRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -263,9 +255,5 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     textAlign: 'center',
     marginHorizontal: 10,
-  },
-  deleteText: {
-    color: 'red',
-    marginLeft: 10,
   },
 });
