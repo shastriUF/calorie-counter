@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { TextInput, StyleSheet, FlatList, Animated, Pressable, TouchableWithoutFeedback, Keyboard, useColorScheme } from 'react-native';
+import { TextInput, FlatList, Animated, Pressable, TouchableWithoutFeedback, Keyboard, useColorScheme } from 'react-native';
 import { Link } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ThemedText } from '@/components/ThemedText';
@@ -8,6 +8,7 @@ import IngredientItem from './components/IngredientItem';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { Ionicons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
+import { commonStyles } from '@/styles/commonStyles';
 
 export default function IngredientsScreen() {
   const [ingredient, setIngredient] = useState('');
@@ -101,18 +102,18 @@ export default function IngredientsScreen() {
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-      <ThemedView style={[styles.container, { backgroundColor }]}>
+      <ThemedView style={[commonStyles.container, { backgroundColor, paddingTop: 100 }]}>
         <StatusBar />
-        <ThemedText type="title" style={styles.headerText}>Add Ingredient</ThemedText>
+        <ThemedText type="title" style={commonStyles.headerText}>Add Ingredient</ThemedText>
         <TextInput
-          style={[styles.input, { borderColor, color: textColor }]}
+          style={[commonStyles.input, { borderColor, color: textColor }]}
           value={ingredient}
           onChangeText={handleIngredientChange}
           placeholder="Ingredient name"
           placeholderTextColor={scheme === 'dark' ? '#ccc' : '#888'}
         />
         <TextInput
-          style={[styles.input, { borderColor, color: textColor }]}
+          style={[commonStyles.input, { borderColor, color: textColor }]}
           value={calories}
           onChangeText={setCalories}
           keyboardType="numeric"
@@ -126,7 +127,7 @@ export default function IngredientsScreen() {
           disabled={!ingredient || !calories || !isCaloriesValid}
         >
           <Animated.View style={{ transform: [{ scale: addButtonScale }] }}>
-            <ThemedText style={styles.buttonText}>
+            <ThemedText style={commonStyles.buttonText}>
               <Ionicons name="add-circle-outline" size={16} /> Add
             </ThemedText>
           </Animated.View>
@@ -143,14 +144,14 @@ export default function IngredientsScreen() {
           )}
           contentContainerStyle={{ paddingTop: 0 }}
         />
-        <ThemedView style={styles.buttonRow}>
+        <ThemedView style={commonStyles.buttonRow}>
           <Link href="/" asChild>
             <Pressable
               onPressIn={() => handlePressIn(homeButtonScale)}
               onPressOut={() => handlePressOut(homeButtonScale)}
             >
               <Animated.View style={{ transform: [{ scale: homeButtonScale }] }}>
-                <ThemedText style={styles.buttonText}>
+                <ThemedText style={commonStyles.buttonText}>
                   <Ionicons name="home-outline" size={16} />
                 </ThemedText>
               </Animated.View>
@@ -162,7 +163,7 @@ export default function IngredientsScreen() {
               onPressOut={() => handlePressOut(trackButtonScale)}
             >
               <Animated.View style={{ transform: [{ scale: trackButtonScale }] }}>
-                <ThemedText style={styles.buttonText}>
+                <ThemedText style={commonStyles.buttonText}>
                   <Ionicons name="stats-chart-outline" size={16} /> Track Calories
                 </ThemedText>
               </Animated.View>
@@ -173,39 +174,3 @@ export default function IngredientsScreen() {
     </TouchableWithoutFeedback>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-    paddingTop: 100, // Add padding to the top
-  },
-  headerText: {
-    marginBottom: 20,
-    paddingTop: 20, // Add padding between the date and the total calories line
-  },
-  input: {
-    height: 40,
-    borderWidth: 1,
-    marginBottom: 20,
-    paddingHorizontal: 10,
-    width: '80%',
-    borderRadius: 10, // Rounded corners
-  },
-  buttonRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 30,
-    marginBottom: 20,
-  },
-  buttonText: {
-    color: '#007BFF',
-    padding: 15,
-    backgroundColor: '#E0E0E0',
-    borderRadius: 10, // Rounded corners
-    textAlign: 'center',
-    marginHorizontal: 10,
-  },
-});

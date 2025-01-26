@@ -1,9 +1,10 @@
-import { StyleSheet, Pressable, Animated } from 'react-native';
+import { Pressable, Animated } from 'react-native';
 import { Link } from 'expo-router';
 import { useRef } from 'react';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { Ionicons } from '@expo/vector-icons';
+import { commonStyles } from '@/styles/commonStyles';
 
 export default function HomeScreen() {
   const caloriesButtonScale = useRef(new Animated.Value(1)).current;
@@ -24,14 +25,14 @@ export default function HomeScreen() {
   };
 
   return (
-    <ThemedView style={styles.container}>
+    <ThemedView style={[commonStyles.container, { paddingTop: 50 }]}>
       <Link href="/calories" asChild>
         <Pressable
           onPressIn={() => handlePressIn(caloriesButtonScale)}
           onPressOut={() => handlePressOut(caloriesButtonScale)}
         >
           <Animated.View style={{ transform: [{ scale: caloriesButtonScale }] }}>
-            <ThemedText style={styles.buttonText}>
+            <ThemedText style={commonStyles.buttonText}>
               <Ionicons name="stats-chart-outline" size={16} /> Track Calories
             </ThemedText>
           </Animated.View>
@@ -43,7 +44,7 @@ export default function HomeScreen() {
           onPressOut={() => handlePressOut(ingredientsButtonScale)}
         >
           <Animated.View style={{ transform: [{ scale: ingredientsButtonScale }] }}>
-            <ThemedText style={styles.buttonText}>
+            <ThemedText style={commonStyles.buttonText}>
               <Ionicons name="add-circle-outline" size={16} /> Add Ingredients
             </ThemedText>
           </Animated.View>
@@ -52,22 +53,3 @@ export default function HomeScreen() {
     </ThemedView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-    paddingTop: 50, // Add padding to the top
-  },
-  buttonText: {
-    color: '#007BFF',
-    padding: 15,
-    backgroundColor: '#E0E0E0',
-    borderRadius: 10, // Rounded corners
-    textAlign: 'center',
-    marginHorizontal: 10,
-    marginVertical: 20,
-  },
-});

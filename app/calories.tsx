@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { TextInput, StyleSheet, FlatList, Animated, Pressable, TouchableWithoutFeedback, Keyboard, useColorScheme, View } from 'react-native';
+import { TextInput, FlatList, Animated, Pressable, TouchableWithoutFeedback, Keyboard, useColorScheme, View } from 'react-native';
 import { Link } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -9,6 +9,7 @@ import ConsumedItem from './components/ConsumedItem';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { Ionicons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
+import { commonStyles } from '@/styles/commonStyles';
 
 type Ingredient = {
   name: string;
@@ -187,11 +188,11 @@ export default function CaloriesScreen() {
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-      <ThemedView style={[styles.container, { backgroundColor }]}>
+      <ThemedView style={[commonStyles.container, { backgroundColor, paddingTop: 100 }]}>
         <StatusBar />
         {errorMessage ? (
-          <ThemedView style={styles.errorBanner}>
-            <ThemedText style={styles.errorText}>{errorMessage}</ThemedText>
+          <ThemedView style={commonStyles.errorBanner}>
+            <ThemedText style={commonStyles.errorText}>{errorMessage}</ThemedText>
           </ThemedView>
         ) : null}
         <DateTimePicker
@@ -200,25 +201,25 @@ export default function CaloriesScreen() {
           display="default"
           onChange={onDateChange}
         />
-        <ThemedText type="title" style={styles.headerText}>Total Calories: {totalCalories}</ThemedText>
+        <ThemedText type="title" style={commonStyles.headerText}>Total Calories: {totalCalories}</ThemedText>
         <TextInput
-          style={[styles.input, { borderColor, color: textColor }]}
+          style={[commonStyles.input, { borderColor, color: textColor }]}
           value={ingredient}
           onChangeText={handleIngredientChange}
           placeholder="Enter ingredient"
           placeholderTextColor={scheme === 'dark' ? '#ccc' : '#888'}
         />
         {filteredIngredients.length > 0 && (
-          <View style={[styles.suggestionsContainer, { backgroundColor, borderColor }]}>
+          <View style={[commonStyles.suggestionsContainer, { backgroundColor, borderColor }]}>
             {filteredIngredients.map((item, index) => (
               <Pressable key={index} onPress={() => handleIngredientSelect(item.name)}>
-                <ThemedText style={styles.suggestionText}>{item.name}</ThemedText>
+                <ThemedText style={commonStyles.suggestionText}>{item.name}</ThemedText>
               </Pressable>
             ))}
           </View>
         )}
         <TextInput
-          style={[styles.input, { borderColor, color: textColor, marginTop: 20, marginBottom: 20 }]}
+          style={[commonStyles.input, { borderColor, color: textColor, marginTop: 20, marginBottom: 20 }]}
           value={quantity}
           onChangeText={setQuantity}
           keyboardType="numeric"
@@ -233,7 +234,7 @@ export default function CaloriesScreen() {
           disabled={!ingredient || !quantity || !isQuantityValid}
         >
           <Animated.View style={{ transform: [{ scale: addButtonScale }] }}>
-            <ThemedText style={styles.buttonText}>
+            <ThemedText style={commonStyles.buttonText}>
               <Ionicons name="add-circle-outline" size={16} /> Add
             </ThemedText>
           </Animated.View>
@@ -251,14 +252,14 @@ export default function CaloriesScreen() {
           )}
           contentContainerStyle={{ paddingTop: 0 }}
         />
-        <ThemedView style={styles.buttonRow}>
+        <ThemedView style={commonStyles.buttonRow}>
           <Link href="/" asChild>
             <Pressable
               onPressIn={() => handlePressIn(homeButtonScale)}
               onPressOut={() => handlePressOut(homeButtonScale)}
             >
               <Animated.View style={{ transform: [{ scale: homeButtonScale }] }}>
-                <ThemedText style={styles.buttonText}>
+                <ThemedText style={commonStyles.buttonText}>
                   <Ionicons name="home-outline" size={16} />
                 </ThemedText>
               </Animated.View>
@@ -270,7 +271,7 @@ export default function CaloriesScreen() {
               onPressOut={() => handlePressOut(ingredientsButtonScale)}
             >
               <Animated.View style={{ transform: [{ scale: ingredientsButtonScale }] }}>
-                <ThemedText style={styles.buttonText}>
+                <ThemedText style={commonStyles.buttonText}>
                   <Ionicons name="add-circle-outline" size={16} /> Add Ingredients
                 </ThemedText>
               </Animated.View>
@@ -282,7 +283,7 @@ export default function CaloriesScreen() {
             onPress={refreshCalories}
           >
             <Animated.View style={{ transform: [{ scale: refreshButtonScale }] }}>
-              <ThemedText style={styles.buttonText}>
+              <ThemedText style={commonStyles.buttonText}>
                 <Ionicons name="reload" size={16} />
               </ThemedText>
             </Animated.View>
@@ -292,59 +293,3 @@ export default function CaloriesScreen() {
     </TouchableWithoutFeedback>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-    paddingTop: 100, // Add padding to the top
-  },
-  errorBanner: {
-    backgroundColor: 'red',
-    padding: 10,
-    marginBottom: 20,
-    width: '100%',
-    alignItems: 'center',
-  },
-  errorText: {
-    color: 'white',
-    fontWeight: 'bold',
-  },
-  headerText: {
-    marginBottom: 20,
-    paddingTop: 20, // Add padding between the date and the total calories line
-  },
-  input: {
-    height: 40,
-    borderWidth: 1,
-    marginBottom: 0,
-    paddingHorizontal: 10,
-    width: '80%',
-    borderRadius: 10, // Rounded corners
-  },
-  suggestionsContainer: {
-    width: '70%',
-    borderWidth: 0.5,
-    marginBottom: 20,
-    borderRadius: 10, // Rounded corners
-  },
-  suggestionText: {
-    padding: 5,
-  },
-  buttonRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 30,
-    marginBottom: 20,
-  },
-  buttonText: {
-    color: '#007BFF',
-    padding: 15,
-    backgroundColor: '#E0E0E0',
-    borderRadius: 10, // Rounded corners
-    textAlign: 'center',
-    marginHorizontal: 10,
-  },
-});
