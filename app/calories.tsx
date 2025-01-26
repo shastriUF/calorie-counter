@@ -84,7 +84,7 @@ export default function CaloriesScreen() {
         setConsumedItems([]); // Ensure it's an array even on error
       }
     };
-
+    // AsyncStorage.clear(); Uncomment this line in dev to clear all data
     loadIngredients();
     loadConsumedItems();
   }, [selectedDate]);
