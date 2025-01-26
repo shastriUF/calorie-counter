@@ -229,7 +229,8 @@ export default function CaloriesScreen() {
     try {
       const storedItems = await AsyncStorage.getItem(`consumedItems_${selectedDate.toLocaleDateString()}`);
       if (storedItems) {
-        const fileUri = FileSystem.documentDirectory + 'calories.json';
+        const date = selectedDate.toLocaleDateString().replace(/\//g, '-');
+        const fileUri = FileSystem.documentDirectory + `calories_${date}.json`;
         await FileSystem.writeAsStringAsync(fileUri, storedItems, { encoding: FileSystem.EncodingType.UTF8 });
         await Sharing.shareAsync(fileUri);
       } else {
