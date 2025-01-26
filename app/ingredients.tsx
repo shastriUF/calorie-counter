@@ -1,8 +1,11 @@
 import { useState, useRef, useEffect } from 'react';
-import { TextInput, ScrollView, Animated, Pressable, useColorScheme } from 'react-native';
+import { TextInput, ScrollView, Animated, Pressable, useColorScheme, Alert } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { Link } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as FileSystem from 'expo-file-system';
+import * as Sharing from 'expo-sharing';
+import * as DocumentPicker from 'expo-document-picker';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import IngredientItem from './components/IngredientItem';
@@ -140,6 +143,44 @@ export default function IngredientsScreen() {
     }
   };
 
+  const exportData = async () => {
+    try {
+      const storedIngredients = await AsyncStorage.getItem('ingredients');
+      if (storedIngredients) {
+        const fileUri = FileSystem.documentDirectory + 'ingredients.json';
+        await FileSystem.writeAsStringAsync(fileUri, storedIngredients, { encoding: FileSystem.EncodingType.UTF8 });
+        await Sharing.shareAsync(fileUri);
+      } else {
+        Alert.alert('No data to export');
+      }
+    } catch (error) {
+      console.error('Failed to export data', error);
+    }
+  };
+
+  const importData = async (fileUri: string) => {
+    try {
+      const importedData = await FileSystem.readAsStringAsync(fileUri, { encoding: FileSystem.EncodingType.UTF8 });
+      const parsedData = JSON.parse(importedData);
+      setIngredients(parsedData);
+      setFilteredIngredients(parsedData);
+      await AsyncStorage.setItem('ingredients', importedData);
+    } catch (error) {
+      console.error('Failed to import data', error);
+    }
+  };
+
+  const handleImportPress = async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({ type: 'application/json' });
+      if (result && !result.canceled) {
+        importData(result.assets[0].uri);
+      }
+    } catch (error) {
+      console.error('Failed to pick document', error);
+    }
+  };
+
   return (
     <ThemedView style={[commonStyles.container, { backgroundColor, paddingTop: 100 }]}>
       <ScrollView style={{ width: '100%' }} contentContainerStyle={{ flexGrow: 1, alignItems: 'center' }}>
@@ -224,6 +265,28 @@ export default function IngredientsScreen() {
             </Animated.View>
           </Pressable>
         </Link>
+        <Pressable
+          onPressIn={() => handlePressIn(addButtonScale)}
+          onPressOut={() => handlePressOut(addButtonScale)}
+          onPress={exportData}
+        >
+          <Animated.View style={{ transform: [{ scale: addButtonScale }] }}>
+            <ThemedText style={commonStyles.buttonText}>
+              <Ionicons name="cloud-upload-outline" size={16} />
+            </ThemedText>
+          </Animated.View>
+        </Pressable>
+        <Pressable
+          onPressIn={() => handlePressIn(addButtonScale)}
+          onPressOut={() => handlePressOut(addButtonScale)}
+          onPress={handleImportPress}
+        >
+          <Animated.View style={{ transform: [{ scale: addButtonScale }] }}>
+            <ThemedText style={commonStyles.buttonText}>
+              <Ionicons name="download-outline" size={16} />
+            </ThemedText>
+          </Animated.View>
+        </Pressable>
       </ThemedView>
     </ThemedView>
   );

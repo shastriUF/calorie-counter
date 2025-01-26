@@ -6,8 +6,8 @@ import { Ionicons } from '@expo/vector-icons';
 type ConsumedItemProps = {
   name: string;
   quantity: number;
-  calories: number;
   unit: string;
+  calories: number;
   onDelete: () => void;
 };
 

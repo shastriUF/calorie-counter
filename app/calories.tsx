@@ -1,10 +1,13 @@
 import { useState, useEffect, useRef } from 'react';
-import { TextInput, ScrollView, Animated, Pressable, useColorScheme, View } from 'react-native';
+import { TextInput, ScrollView, Animated, Pressable, useColorScheme, View, Alert } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { Link } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import * as FileSystem from 'expo-file-system';
+import * as Sharing from 'expo-sharing';
 import { ThemedText } from '@/components/ThemedText';
+import * as DocumentPicker from 'expo-document-picker';
 import { ThemedView } from '@/components/ThemedView';
 import ConsumedItemEntry from './components/ConsumedItemEntry';
 import { useThemeColor } from '@/hooks/useThemeColor';
@@ -22,8 +25,8 @@ type Ingredient = {
 type ConsumedItem = {
   name: string;
   quantity: number;
-  calories: number;
   unit: string;
+  calories: number;
 };
 
 const unitConversions: { [key: string]: { grams?: number; ml?: number; count?: number } } = {
@@ -139,7 +142,7 @@ export default function CaloriesScreen() {
       }
 
       const newTotalCalories = totalCalories + calories;
-      const newConsumedItems = [...consumedItems, { name: ingredient, quantity: quantity_num, calories, unit }];
+      const newConsumedItems = [...consumedItems, { name: ingredient, quantity: quantity_num, unit, calories }];
       setTotalCalories(newTotalCalories);
       setConsumedItems(newConsumedItems);
       saveTotalCalories(newTotalCalories);
@@ -228,13 +231,58 @@ export default function CaloriesScreen() {
           };
         });
         setConsumedItems(updatedItems);
+        saveConsumedItems(updatedItems);
         const newTotalCalories = updatedItems.reduce((sum: number, item: ConsumedItem) => sum + item.calories, 0);
         setTotalCalories(newTotalCalories);
         saveTotalCalories(newTotalCalories);
-        saveConsumedItems(updatedItems);
       }
     } catch (error) {
       console.error('Failed to refresh calories', error);
+    }
+  };
+
+  const exportData = async () => {
+    try {
+      const storedCalories = await AsyncStorage.getItem(`calories_${selectedDate.toLocaleDateString()}`);
+      const storedItems = await AsyncStorage.getItem(`consumedItems_${selectedDate.toLocaleDateString()}`);
+      if (storedCalories && storedItems) {
+        const data = {
+          calories: storedCalories,
+          consumedItems: storedItems,
+        };
+        const fileUri = FileSystem.documentDirectory + 'calories.json';
+        await FileSystem.writeAsStringAsync(fileUri, JSON.stringify(data), { encoding: FileSystem.EncodingType.UTF8 });
+        await Sharing.shareAsync(fileUri);
+      } else {
+        Alert.alert('No data to export');
+      }
+    } catch (error) {
+      console.error('Failed to export data', error);
+    }
+  };
+
+  const importData = async (fileUri: string) => {
+    try {
+      const importedData = await FileSystem.readAsStringAsync(fileUri, { encoding: FileSystem.EncodingType.UTF8 });
+      const parsedData = JSON.parse(importedData);
+      setTotalCalories(parseInt(parsedData.calories));
+      setConsumedItems(JSON.parse(parsedData.consumedItems));
+      await AsyncStorage.setItem(`calories_${selectedDate.toLocaleDateString()}`, parsedData.calories);
+      await AsyncStorage.setItem(`consumedItems_${selectedDate.toLocaleDateString()}`, parsedData.consumedItems);
+      await refreshCalories();
+    } catch (error) {
+      console.error('Failed to import data', error);
+    }
+  };
+
+  const handleImportPress = async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({ type: 'application/json' });
+      if (result && !result.canceled) {
+        importData(result.assets[0].uri);
+      }
+    } catch (error) {
+      console.error('Failed to pick document', error);
     }
   };
 
@@ -350,6 +398,28 @@ export default function CaloriesScreen() {
           <Animated.View style={{ transform: [{ scale: refreshButtonScale }] }}>
             <ThemedText style={commonStyles.buttonText}>
               <Ionicons name="reload" size={16} />
+            </ThemedText>
+          </Animated.View>
+        </Pressable>
+        <Pressable
+          onPressIn={() => handlePressIn(addButtonScale)}
+          onPressOut={() => handlePressOut(addButtonScale)}
+          onPress={exportData}
+        >
+          <Animated.View style={{ transform: [{ scale: addButtonScale }] }}>
+            <ThemedText style={commonStyles.buttonText}>
+              <Ionicons name="cloud-upload-outline" size={16} />
+            </ThemedText>
+          </Animated.View>
+        </Pressable>
+        <Pressable
+          onPressIn={() => handlePressIn(addButtonScale)}
+          onPressOut={() => handlePressOut(addButtonScale)}
+          onPress={handleImportPress}
+        >
+          <Animated.View style={{ transform: [{ scale: addButtonScale }] }}>
+            <ThemedText style={commonStyles.buttonText}>
+              <Ionicons name="download-outline" size={16} />
             </ThemedText>
           </Animated.View>
         </Pressable>

@@ -36,7 +36,7 @@ export const commonStyles = StyleSheet.create({
     backgroundColor: '#E0E0E0',
     borderRadius: 10,
     textAlign: 'center',
-    marginHorizontal: 10,
+    marginHorizontal: 4,
   },
   listItem: {
     flexDirection: 'row',
