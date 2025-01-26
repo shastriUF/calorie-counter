@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { TextInput, Button, StyleSheet, FlatList, Animated, Pressable, TouchableWithoutFeedback, Keyboard, useColorScheme } from 'react-native';
+import { TextInput, StyleSheet, FlatList, Animated, Pressable, TouchableWithoutFeedback, Keyboard, useColorScheme } from 'react-native';
 import { Link } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ThemedText } from '@/components/ThemedText';
@@ -14,7 +14,9 @@ export default function IngredientsScreen() {
   const [calories, setCalories] = useState('');
   const [ingredients, setIngredients] = useState<{ name: string; calories: number }[]>([]);
   const [filteredIngredients, setFilteredIngredients] = useState<{ name: string; calories: number }[]>([]);
-  const scale = useRef(new Animated.Value(1)).current;
+  const addButtonScale = useRef(new Animated.Value(1)).current;
+  const homeButtonScale = useRef(new Animated.Value(1)).current;
+  const trackButtonScale = useRef(new Animated.Value(1)).current;
   const scheme = useColorScheme();
   const backgroundColor = useThemeColor({}, 'background');
   const textColor = useThemeColor({}, 'text');
@@ -69,14 +71,14 @@ export default function IngredientsScreen() {
     saveIngredients(newIngredients);
   };
 
-  const handlePressIn = () => {
+  const handlePressIn = (scale: Animated.Value) => {
     Animated.spring(scale, {
       toValue: 0.95,
       useNativeDriver: true,
     }).start();
   };
 
-  const handlePressOut = () => {
+  const handlePressOut = (scale: Animated.Value) => {
     Animated.spring(scale, {
       toValue: 1,
       useNativeDriver: true,
@@ -118,12 +120,12 @@ export default function IngredientsScreen() {
           placeholderTextColor={scheme === 'dark' ? '#ccc' : '#888'}
         />
         <Pressable
-          onPressIn={handlePressIn}
-          onPressOut={handlePressOut}
+          onPressIn={() => handlePressIn(addButtonScale)}
+          onPressOut={() => handlePressOut(addButtonScale)}
           onPress={addIngredient}
           disabled={!ingredient || !calories || !isCaloriesValid}
         >
-          <Animated.View style={{ transform: [{ scale }] }}>
+          <Animated.View style={{ transform: [{ scale: addButtonScale }] }}>
             <ThemedText style={styles.buttonText}>
               <Ionicons name="add-circle-outline" size={16} /> Add
             </ThemedText>
@@ -144,10 +146,10 @@ export default function IngredientsScreen() {
         <ThemedView style={styles.buttonRow}>
           <Link href="/" asChild>
             <Pressable
-              onPressIn={handlePressIn}
-              onPressOut={handlePressOut}
+              onPressIn={() => handlePressIn(homeButtonScale)}
+              onPressOut={() => handlePressOut(homeButtonScale)}
             >
-              <Animated.View style={{ transform: [{ scale }] }}>
+              <Animated.View style={{ transform: [{ scale: homeButtonScale }] }}>
                 <ThemedText style={styles.buttonText}>
                   <Ionicons name="home-outline" size={16} />
                 </ThemedText>
@@ -156,10 +158,10 @@ export default function IngredientsScreen() {
           </Link>
           <Link href="/calories" asChild>
             <Pressable
-              onPressIn={handlePressIn}
-              onPressOut={handlePressOut}
+              onPressIn={() => handlePressIn(trackButtonScale)}
+              onPressOut={() => handlePressOut(trackButtonScale)}
             >
-              <Animated.View style={{ transform: [{ scale }] }}>
+              <Animated.View style={{ transform: [{ scale: trackButtonScale }] }}>
                 <ThemedText style={styles.buttonText}>
                   <Ionicons name="stats-chart-outline" size={16} /> Track Calories
                 </ThemedText>

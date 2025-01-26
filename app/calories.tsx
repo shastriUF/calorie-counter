@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { TextInput, Button, StyleSheet, FlatList, Animated, Pressable, TouchableWithoutFeedback, Keyboard, useColorScheme, View } from 'react-native';
+import { TextInput, StyleSheet, FlatList, Animated, Pressable, TouchableWithoutFeedback, Keyboard, useColorScheme, View } from 'react-native';
 import { Link } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -25,7 +25,10 @@ export default function CaloriesScreen() {
   const [filteredIngredients, setFilteredIngredients] = useState<Ingredient[]>([]);
   const [errorMessage, setErrorMessage] = useState('');
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const scale = useRef(new Animated.Value(1)).current;
+  const addButtonScale = useRef(new Animated.Value(1)).current;
+  const refreshButtonScale = useRef(new Animated.Value(1)).current;
+  const homeButtonScale = useRef(new Animated.Value(1)).current;
+  const ingredientsButtonScale = useRef(new Animated.Value(1)).current;
   const scheme = useColorScheme();
   const backgroundColor = useThemeColor({}, 'background');
   const textColor = useThemeColor({}, 'text');
@@ -120,14 +123,14 @@ export default function CaloriesScreen() {
     saveTotalCalories(totalCalories);
   };
 
-  const handlePressIn = () => {
+  const handlePressIn = (scale: Animated.Value) => {
     Animated.spring(scale, {
       toValue: 0.95,
       useNativeDriver: true,
     }).start();
   };
 
-  const handlePressOut = () => {
+  const handlePressOut = (scale: Animated.Value) => {
     Animated.spring(scale, {
       toValue: 1,
       useNativeDriver: true,
@@ -224,12 +227,12 @@ export default function CaloriesScreen() {
 
         />
         <Pressable
-          onPressIn={handlePressIn}
-          onPressOut={handlePressOut}
+          onPressIn={() => handlePressIn(addButtonScale)}
+          onPressOut={() => handlePressOut(addButtonScale)}
           onPress={addCalories}
           disabled={!ingredient || !quantity || !isQuantityValid}
         >
-          <Animated.View style={{ transform: [{ scale }] }}>
+          <Animated.View style={{ transform: [{ scale: addButtonScale }] }}>
             <ThemedText style={styles.buttonText}>
               <Ionicons name="add-circle-outline" size={16} /> Add
             </ThemedText>
@@ -251,10 +254,10 @@ export default function CaloriesScreen() {
         <ThemedView style={styles.buttonRow}>
           <Link href="/" asChild>
             <Pressable
-              onPressIn={handlePressIn}
-              onPressOut={handlePressOut}
+              onPressIn={() => handlePressIn(homeButtonScale)}
+              onPressOut={() => handlePressOut(homeButtonScale)}
             >
-              <Animated.View style={{ transform: [{ scale }] }}>
+              <Animated.View style={{ transform: [{ scale: homeButtonScale }] }}>
                 <ThemedText style={styles.buttonText}>
                   <Ionicons name="home-outline" size={16} />
                 </ThemedText>
@@ -263,10 +266,10 @@ export default function CaloriesScreen() {
           </Link>
           <Link href="/ingredients" asChild>
             <Pressable
-              onPressIn={handlePressIn}
-              onPressOut={handlePressOut}
+              onPressIn={() => handlePressIn(ingredientsButtonScale)}
+              onPressOut={() => handlePressOut(ingredientsButtonScale)}
             >
-              <Animated.View style={{ transform: [{ scale }] }}>
+              <Animated.View style={{ transform: [{ scale: ingredientsButtonScale }] }}>
                 <ThemedText style={styles.buttonText}>
                   <Ionicons name="add-circle-outline" size={16} /> Add Ingredients
                 </ThemedText>
@@ -274,16 +277,16 @@ export default function CaloriesScreen() {
             </Pressable>
           </Link>
           <Pressable
-          onPressIn={handlePressIn}
-          onPressOut={handlePressOut}
-          onPress={refreshCalories}
-        >
-          <Animated.View style={{ transform: [{ scale }] }}>
-            <ThemedText style={styles.buttonText}>
-              <Ionicons name="reload" size={16} />
-            </ThemedText>
-          </Animated.View>
-        </Pressable>
+            onPressIn={() => handlePressIn(refreshButtonScale)}
+            onPressOut={() => handlePressOut(refreshButtonScale)}
+            onPress={refreshCalories}
+          >
+            <Animated.View style={{ transform: [{ scale: refreshButtonScale }] }}>
+              <ThemedText style={styles.buttonText}>
+                <Ionicons name="reload" size={16} />
+              </ThemedText>
+            </Animated.View>
+          </Pressable>
         </ThemedView>
       </ThemedView>
     </TouchableWithoutFeedback>
