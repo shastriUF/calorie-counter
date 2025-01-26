@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { TextInput, FlatList, Animated, Pressable, TouchableWithoutFeedback, Keyboard, useColorScheme } from 'react-native';
+import { TextInput, ScrollView, Animated, Pressable, useColorScheme } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { Link } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -141,8 +141,8 @@ export default function IngredientsScreen() {
   };
 
   return (
-    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-      <ThemedView style={[commonStyles.container, { backgroundColor, paddingTop: 100 }]}>
+    <ThemedView style={[commonStyles.container, { backgroundColor, paddingTop: 100 }]}>
+      <ScrollView style={{ width: '100%' }} contentContainerStyle={{ flexGrow: 1, alignItems: 'center' }}>
         <StatusBar />
         <ThemedText type="title" style={commonStyles.headerText}>Add Ingredient</ThemedText>
         <TextInput
@@ -186,47 +186,45 @@ export default function IngredientsScreen() {
             </ThemedText>
           </Animated.View>
         </Pressable>
-        <FlatList
-          data={filteredIngredients}
-          keyExtractor={(item, index) => index.toString()}
-          renderItem={({ item, index }) => (
+        <ScrollView style={{ width: '100%' }} contentContainerStyle={{ flexGrow: 1 }}>
+          {filteredIngredients.map((item, index) => (
             <IngredientItem
+              key={index}
               name={item.name}
               caloriesPerGram={item.caloriesPerGram}
               caloriesPerMl={item.caloriesPerMl}
               caloriesPerCount={item.caloriesPerCount}
               onDelete={() => deleteIngredient(index)}
             />
-          )}
-          contentContainerStyle={{ paddingTop: 0 }}
-        />
-        <ThemedView style={commonStyles.buttonRow}>
-          <Link href="/" asChild>
-            <Pressable
-              onPressIn={() => handlePressIn(homeButtonScale)}
-              onPressOut={() => handlePressOut(homeButtonScale)}
-            >
-              <Animated.View style={{ transform: [{ scale: homeButtonScale }] }}>
-                <ThemedText style={commonStyles.buttonText}>
-                  <Ionicons name="home-outline" size={16} />
-                </ThemedText>
-              </Animated.View>
-            </Pressable>
-          </Link>
-          <Link href="/calories" asChild>
-            <Pressable
-              onPressIn={() => handlePressIn(trackButtonScale)}
-              onPressOut={() => handlePressOut(trackButtonScale)}
-            >
-              <Animated.View style={{ transform: [{ scale: trackButtonScale }] }}>
-                <ThemedText style={commonStyles.buttonText}>
-                  <Ionicons name="stats-chart-outline" size={16} /> Track Calories
-                </ThemedText>
-              </Animated.View>
-            </Pressable>
-          </Link>
-        </ThemedView>
+          ))}
+        </ScrollView>
+      </ScrollView>
+      <ThemedView style={commonStyles.buttonRow}>
+        <Link href="/" asChild>
+          <Pressable
+            onPressIn={() => handlePressIn(homeButtonScale)}
+            onPressOut={() => handlePressOut(homeButtonScale)}
+          >
+            <Animated.View style={{ transform: [{ scale: homeButtonScale }] }}>
+              <ThemedText style={commonStyles.buttonText}>
+                <Ionicons name="home-outline" size={16} />
+              </ThemedText>
+            </Animated.View>
+          </Pressable>
+        </Link>
+        <Link href="/calories" asChild>
+          <Pressable
+            onPressIn={() => handlePressIn(trackButtonScale)}
+            onPressOut={() => handlePressOut(trackButtonScale)}
+          >
+            <Animated.View style={{ transform: [{ scale: trackButtonScale }] }}>
+              <ThemedText style={commonStyles.buttonText}>
+                <Ionicons name="stats-chart-outline" size={16} /> Track Calories
+              </ThemedText>
+            </Animated.View>
+          </Pressable>
+        </Link>
       </ThemedView>
-    </TouchableWithoutFeedback>
+    </ThemedView>
   );
 }
