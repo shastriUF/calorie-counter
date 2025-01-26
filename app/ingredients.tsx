@@ -117,11 +117,18 @@ export default function IngredientsScreen() {
           placeholder="Calories per unit"
           placeholderTextColor={scheme === 'dark' ? '#ccc' : '#888'}
         />
-        <Button
-          title="Add"
+        <Pressable
+          onPressIn={handlePressIn}
+          onPressOut={handlePressOut}
           onPress={addIngredient}
           disabled={!ingredient || !calories || !isCaloriesValid}
-        />
+        >
+          <Animated.View style={{ transform: [{ scale }] }}>
+            <ThemedText style={styles.buttonText}>
+              <Ionicons name="add-circle-outline" size={16} /> Add
+            </ThemedText>
+          </Animated.View>
+        </Pressable>
         <FlatList
           data={filteredIngredients}
           keyExtractor={(item, index) => index.toString()}

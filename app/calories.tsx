@@ -159,13 +159,27 @@ export default function CaloriesScreen() {
     setFilteredIngredients([]);
   };
 
-  const refreshCalories = () => {
-    const newTotalCalories = consumedItems.reduce((sum, item) => {
-      const ingredientData = ingredientsData.find(ingredient => ingredient.name.toLowerCase() === item.name.toLowerCase());
-      return sum + (ingredientData ? ingredientData.calories * item.quantity : 0);
-    }, 0);
-    setTotalCalories(newTotalCalories);
-    saveTotalCalories(newTotalCalories);
+  const refreshCalories = async () => {
+    try {
+      const storedItems = await AsyncStorage.getItem(`consumedItems_${selectedDate.toLocaleDateString()}`);
+      if (storedItems) {
+        const parsedItems = JSON.parse(storedItems);
+        const updatedItems = parsedItems.map((item: Ingredient) => {
+          const ingredientData = ingredientsData.find(ingredient => ingredient.name.toLowerCase() === item.name.toLowerCase());
+          return {
+            ...item,
+            calories: ingredientData ? ingredientData.calories * item.quantity : item.calories,
+          };
+        });
+        setConsumedItems(updatedItems);
+        const newTotalCalories = updatedItems.reduce((sum: number, item: Ingredient) => sum + item.calories, 0);
+        setTotalCalories(newTotalCalories);
+        saveTotalCalories(newTotalCalories);
+        saveConsumedItems(updatedItems);
+      }
+    } catch (error) {
+      console.error('Failed to refresh calories', error);
+    }
   };
 
   return (
@@ -201,22 +215,26 @@ export default function CaloriesScreen() {
           </View>
         )}
         <TextInput
-          style={[styles.input, { borderColor, color: textColor }]}
+          style={[styles.input, { borderColor, color: textColor, marginTop: 20, marginBottom: 20 }]}
           value={quantity}
           onChangeText={setQuantity}
           keyboardType="numeric"
           placeholder="Enter quantity"
           placeholderTextColor={scheme === 'dark' ? '#ccc' : '#888'}
+
         />
-        <Button
-          title="Add"
+        <Pressable
+          onPressIn={handlePressIn}
+          onPressOut={handlePressOut}
           onPress={addCalories}
           disabled={!ingredient || !quantity || !isQuantityValid}
-        />
-        <Button
-          title="Refresh Calories"
-          onPress={refreshCalories}
-        />
+        >
+          <Animated.View style={{ transform: [{ scale }] }}>
+            <ThemedText style={styles.buttonText}>
+              <Ionicons name="add-circle-outline" size={16} /> Add
+            </ThemedText>
+          </Animated.View>
+        </Pressable>
         <FlatList
           data={consumedItems}
           keyExtractor={(item, index) => index.toString()}
@@ -255,6 +273,17 @@ export default function CaloriesScreen() {
               </Animated.View>
             </Pressable>
           </Link>
+          <Pressable
+          onPressIn={handlePressIn}
+          onPressOut={handlePressOut}
+          onPress={refreshCalories}
+        >
+          <Animated.View style={{ transform: [{ scale }] }}>
+            <ThemedText style={styles.buttonText}>
+              <Ionicons name="reload" size={16} />
+            </ThemedText>
+          </Animated.View>
+        </Pressable>
         </ThemedView>
       </ThemedView>
     </TouchableWithoutFeedback>
