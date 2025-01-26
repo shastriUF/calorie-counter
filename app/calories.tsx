@@ -71,19 +71,6 @@ export default function CaloriesScreen() {
       }
     };
 
-    const loadTotalCalories = async () => {
-      try {
-        const storedCalories = await AsyncStorage.getItem(`calories_${selectedDate.toLocaleDateString()}`);
-        if (storedCalories) {
-          setTotalCalories(parseInt(storedCalories));
-        } else {
-          setTotalCalories(0);
-        }
-      } catch (error) {
-        console.error('Failed to load total calories', error);
-      }
-    };
-
     const loadConsumedItems = async () => {
       try {
         const storedItems = await AsyncStorage.getItem(`consumedItems_${selectedDate.toLocaleDateString()}`);
@@ -94,21 +81,21 @@ export default function CaloriesScreen() {
         }
       } catch (error) {
         console.error('Failed to load consumed items', error);
+        setConsumedItems([]); // Ensure it's an array even on error
       }
     };
 
     loadIngredients();
-    loadTotalCalories();
     loadConsumedItems();
   }, [selectedDate]);
 
-  const saveTotalCalories = async (calories: number) => {
-    try {
-      await AsyncStorage.setItem(`calories_${selectedDate.toLocaleDateString()}`, calories.toString());
-    } catch (error) {
-      console.error('Failed to save total calories', error);
+  useEffect(() => {
+    const calculateTotalCalories = async () => {
+      const totalCalories = [...consumedItems].reduce((sum, item) => sum + item.calories, 0);
+      setTotalCalories(totalCalories);    
     }
-  };
+    calculateTotalCalories();
+  }, [consumedItems]);
 
   const saveConsumedItems = async (items: ConsumedItem[]) => {
     try {
@@ -145,7 +132,6 @@ export default function CaloriesScreen() {
       const newConsumedItems = [...consumedItems, { name: ingredient, quantity: quantity_num, unit, calories }];
       setTotalCalories(newTotalCalories);
       setConsumedItems(newConsumedItems);
-      saveTotalCalories(newTotalCalories);
       saveConsumedItems(newConsumedItems);
       setErrorMessage('');
     } else {
@@ -163,7 +149,6 @@ export default function CaloriesScreen() {
     saveConsumedItems(newConsumedItems);
     const totalCalories = newConsumedItems.reduce((sum, item) => sum + item.calories, 0);
     setTotalCalories(totalCalories);
-    saveTotalCalories(totalCalories);
   };
 
   const handlePressIn = (scale: Animated.Value) => {
@@ -234,7 +219,6 @@ export default function CaloriesScreen() {
         saveConsumedItems(updatedItems);
         const newTotalCalories = updatedItems.reduce((sum: number, item: ConsumedItem) => sum + item.calories, 0);
         setTotalCalories(newTotalCalories);
-        saveTotalCalories(newTotalCalories);
       }
     } catch (error) {
       console.error('Failed to refresh calories', error);
@@ -243,15 +227,10 @@ export default function CaloriesScreen() {
 
   const exportData = async () => {
     try {
-      const storedCalories = await AsyncStorage.getItem(`calories_${selectedDate.toLocaleDateString()}`);
       const storedItems = await AsyncStorage.getItem(`consumedItems_${selectedDate.toLocaleDateString()}`);
-      if (storedCalories && storedItems) {
-        const data = {
-          calories: storedCalories,
-          consumedItems: storedItems,
-        };
+      if (storedItems) {
         const fileUri = FileSystem.documentDirectory + 'calories.json';
-        await FileSystem.writeAsStringAsync(fileUri, JSON.stringify(data), { encoding: FileSystem.EncodingType.UTF8 });
+        await FileSystem.writeAsStringAsync(fileUri, storedItems, { encoding: FileSystem.EncodingType.UTF8 });
         await Sharing.shareAsync(fileUri);
       } else {
         Alert.alert('No data to export');
@@ -265,10 +244,8 @@ export default function CaloriesScreen() {
     try {
       const importedData = await FileSystem.readAsStringAsync(fileUri, { encoding: FileSystem.EncodingType.UTF8 });
       const parsedData = JSON.parse(importedData);
-      setTotalCalories(parseInt(parsedData.calories));
-      setConsumedItems(JSON.parse(parsedData.consumedItems));
-      await AsyncStorage.setItem(`calories_${selectedDate.toLocaleDateString()}`, parsedData.calories);
-      await AsyncStorage.setItem(`consumedItems_${selectedDate.toLocaleDateString()}`, parsedData.consumedItems);
+      setConsumedItems(parsedData);
+      await saveConsumedItems(parsedData);
       await refreshCalories();
     } catch (error) {
       console.error('Failed to import data', error);
