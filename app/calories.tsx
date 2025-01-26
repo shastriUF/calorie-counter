@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
 import { TextInput, FlatList, Animated, Pressable, TouchableWithoutFeedback, Keyboard, useColorScheme, View } from 'react-native';
+import { Picker } from '@react-native-picker/picker';
 import { Link } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
-import ConsumedItem from './components/ConsumedItem';
+import ConsumedItemEntry from './components/ConsumedItemEntry';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { Ionicons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
@@ -13,15 +14,34 @@ import { commonStyles } from '@/styles/commonStyles';
 
 type Ingredient = {
   name: string;
+  caloriesPerGram: number | null;
+  caloriesPerMl: number | null;
+  caloriesPerCount: number | null;
+};
+
+type ConsumedItem = {
+  name: string;
   quantity: number;
   calories: number;
+  unit: string;
+};
+
+const unitConversions: { [key: string]: { grams?: number; ml?: number; count?: number } } = {
+  grams: { grams: 1 },
+  oz: { grams: 28.3495 },
+  teaspoons: { ml: 5 },
+  tablespoons: { ml: 15 },
+  cups: { ml: 240 },
+  ml: { ml: 1 },
+  count: { count: 1 },
 };
 
 export default function CaloriesScreen() {
   const [ingredient, setIngredient] = useState('');
   const [quantity, setQuantity] = useState('');
+  const [unit, setUnit] = useState('grams');
   const [totalCalories, setTotalCalories] = useState(0);
-  const [consumedItems, setConsumedItems] = useState<Ingredient[]>([]);
+  const [consumedItems, setConsumedItems] = useState<ConsumedItem[]>([]);
   const [ingredientsData, setIngredientsData] = useState<Ingredient[]>([]);
   const [filteredIngredients, setFilteredIngredients] = useState<Ingredient[]>([]);
   const [errorMessage, setErrorMessage] = useState('');
@@ -87,7 +107,7 @@ export default function CaloriesScreen() {
     }
   };
 
-  const saveConsumedItems = async (items: Ingredient[]) => {
+  const saveConsumedItems = async (items: ConsumedItem[]) => {
     try {
       await AsyncStorage.setItem(`consumedItems_${selectedDate.toLocaleDateString()}`, JSON.stringify(items));
     } catch (error) {
@@ -99,9 +119,27 @@ export default function CaloriesScreen() {
     const ingredientData = ingredientsData.find(item => item.name.toLowerCase() === ingredient.toLowerCase());
     if (ingredientData) {
       const quantity_num = parseFloat(quantity);
-      const calories = ingredientData.calories * quantity_num;
+      let calories = 0;
+
+      if (unit in unitConversions) {
+        const conversion = unitConversions[unit];
+        if (conversion.grams && ingredientData.caloriesPerGram !== null) {
+          calories = ingredientData.caloriesPerGram * conversion.grams * quantity_num;
+        } else if (conversion.ml && ingredientData.caloriesPerMl !== null) {
+          calories = ingredientData.caloriesPerMl * conversion.ml * quantity_num;
+        } else if (conversion.count && ingredientData.caloriesPerCount !== null) {
+          calories = ingredientData.caloriesPerCount * conversion.count * quantity_num;
+        } else {
+          setErrorMessage('Conversion not available for the selected unit.');
+          return;
+        }
+      } else {
+        setErrorMessage('Invalid unit selected.');
+        return;
+      }
+
       const newTotalCalories = totalCalories + calories;
-      const newConsumedItems = [...consumedItems, { name: ingredient, quantity: quantity_num, calories }];
+      const newConsumedItems = [...consumedItems, { name: ingredient, quantity: quantity_num, calories, unit }];
       setTotalCalories(newTotalCalories);
       setConsumedItems(newConsumedItems);
       saveTotalCalories(newTotalCalories);
@@ -112,6 +150,7 @@ export default function CaloriesScreen() {
     }
     setIngredient('');
     setQuantity('');
+    setUnit('grams');
   };
 
   const deleteConsumedItem = (index: number) => {
@@ -168,15 +207,28 @@ export default function CaloriesScreen() {
       const storedItems = await AsyncStorage.getItem(`consumedItems_${selectedDate.toLocaleDateString()}`);
       if (storedItems) {
         const parsedItems = JSON.parse(storedItems);
-        const updatedItems = parsedItems.map((item: Ingredient) => {
+        const updatedItems = parsedItems.map((item: ConsumedItem) => {
           const ingredientData = ingredientsData.find(ingredient => ingredient.name.toLowerCase() === item.name.toLowerCase());
+          let calories = 0;
+          if (ingredientData) {
+            const conversion = unitConversions[item.unit];
+            if (conversion.grams && ingredientData.caloriesPerGram !== null) {
+              calories = ingredientData.caloriesPerGram * conversion.grams * item.quantity;
+            } else if (conversion.ml && ingredientData.caloriesPerMl !== null) {
+              calories = ingredientData.caloriesPerMl * conversion.ml * item.quantity;
+            } else if (conversion.count && ingredientData.caloriesPerCount !== null) {
+              calories = ingredientData.caloriesPerCount * conversion.count * item.quantity;
+            } else {
+              calories = item.calories;
+            }
+          }
           return {
             ...item,
-            calories: ingredientData ? ingredientData.calories * item.quantity : item.calories,
+            calories,
           };
         });
         setConsumedItems(updatedItems);
-        const newTotalCalories = updatedItems.reduce((sum: number, item: Ingredient) => sum + item.calories, 0);
+        const newTotalCalories = updatedItems.reduce((sum: number, item: ConsumedItem) => sum + item.calories, 0);
         setTotalCalories(newTotalCalories);
         saveTotalCalories(newTotalCalories);
         saveConsumedItems(updatedItems);
@@ -225,8 +277,21 @@ export default function CaloriesScreen() {
           keyboardType="numeric"
           placeholder="Enter quantity"
           placeholderTextColor={scheme === 'dark' ? '#ccc' : '#888'}
-
         />
+        <Picker
+          selectedValue={unit}
+          onValueChange={(itemValue) => setUnit(itemValue)}
+          style={[commonStyles.picker, { color: textColor }]}
+          itemStyle={{ color: textColor }}
+        >
+          <Picker.Item label="Grams" value="grams" />
+          <Picker.Item label="Ounces" value="oz" />
+          <Picker.Item label="Teaspoons" value="teaspoons" />
+          <Picker.Item label="Tablespoons" value="tablespoons" />
+          <Picker.Item label="Cups" value="cups" />
+          <Picker.Item label="Milliliters" value="ml" />
+          <Picker.Item label="Count" value="count" />
+        </Picker>
         <Pressable
           onPressIn={() => handlePressIn(addButtonScale)}
           onPressOut={() => handlePressOut(addButtonScale)}
@@ -243,9 +308,10 @@ export default function CaloriesScreen() {
           data={consumedItems}
           keyExtractor={(item, index) => index.toString()}
           renderItem={({ item, index }) => (
-            <ConsumedItem
+            <ConsumedItemEntry
               name={item.name}
               quantity={item.quantity}
+              unit={item.unit}
               calories={item.calories}
               onDelete={() => deleteConsumedItem(index)}
             />
