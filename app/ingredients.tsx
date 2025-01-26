@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { TextInput, FlatList, Animated, Pressable, TouchableWithoutFeedback, Keyboard, useColorScheme } from 'react-native';
+import { Picker } from '@react-native-picker/picker';
 import { Link } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ThemedText } from '@/components/ThemedText';
@@ -10,11 +11,29 @@ import { Ionicons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
 import { commonStyles } from '@/styles/commonStyles';
 
+type Ingredient = {
+  name: string;
+  caloriesPerGram: number | null;
+  caloriesPerMl: number | null;
+  caloriesPerCount: number | null;
+};
+
+const unitConversions: { [key: string]: { grams?: number; ml?: number; count?: number } } = {
+  grams: { grams: 1 },
+  oz: { grams: 28.3495 },
+  teaspoons: { ml: 5 },
+  tablespoons: { ml: 15 },
+  cups: { ml: 240 },
+  ml: { ml: 1 },
+  count: { count: 1 },
+};
+
 export default function IngredientsScreen() {
   const [ingredient, setIngredient] = useState('');
   const [calories, setCalories] = useState('');
-  const [ingredients, setIngredients] = useState<{ name: string; calories: number }[]>([]);
-  const [filteredIngredients, setFilteredIngredients] = useState<{ name: string; calories: number }[]>([]);
+  const [unit, setUnit] = useState('grams');
+  const [ingredients, setIngredients] = useState<Ingredient[]>([]);
+  const [filteredIngredients, setFilteredIngredients] = useState<Ingredient[]>([]);
   const addButtonScale = useRef(new Animated.Value(1)).current;
   const homeButtonScale = useRef(new Animated.Value(1)).current;
   const trackButtonScale = useRef(new Animated.Value(1)).current;
@@ -40,7 +59,7 @@ export default function IngredientsScreen() {
     loadIngredients();
   }, []);
 
-  const saveIngredients = async (newIngredients: { name: string; calories: number }[]) => {
+  const saveIngredients = async (newIngredients: Ingredient[]) => {
     try {
       await AsyncStorage.setItem('ingredients', JSON.stringify(newIngredients));
     } catch (error) {
@@ -51,17 +70,38 @@ export default function IngredientsScreen() {
   const addIngredient = () => {
     const existingIngredientIndex = ingredients.findIndex(item => item.name.toLowerCase() === ingredient.toLowerCase());
     let newIngredients;
+    const caloriesPerUnit = parseFloat(calories);
+    const { caloriesPerGram, caloriesPerMl, caloriesPerCount } = convertCalories(caloriesPerUnit, unit);
+
     if (existingIngredientIndex !== -1) {
       newIngredients = [...ingredients];
-      newIngredients[existingIngredientIndex] = { name: ingredient, calories: parseInt(calories) };
+      const savedCaloriesPerGram = newIngredients[existingIngredientIndex].caloriesPerGram;
+      const savedCaloriesPerMl = newIngredients[existingIngredientIndex].caloriesPerMl;
+      const savedCaloriesPerCount = newIngredients[existingIngredientIndex].caloriesPerCount;
+      
+      const enteredCaloriesPerGram = caloriesPerGram != null ? caloriesPerGram : savedCaloriesPerGram;
+      const enteredCaloriesPerMl = caloriesPerMl != null ? caloriesPerMl : savedCaloriesPerMl;
+      const enteredCaloriesPerCount = caloriesPerCount != null ? caloriesPerCount : savedCaloriesPerCount;
+      
+      newIngredients[existingIngredientIndex] = { name: ingredient, caloriesPerGram: enteredCaloriesPerGram, caloriesPerMl: enteredCaloriesPerMl, caloriesPerCount: enteredCaloriesPerCount };
     } else {
-      newIngredients = [...ingredients, { name: ingredient, calories: parseInt(calories) }];
+      newIngredients = [...ingredients, { name: ingredient, caloriesPerGram, caloriesPerMl, caloriesPerCount }];
     }
     setIngredients(newIngredients);
     setFilteredIngredients(newIngredients);
     saveIngredients(newIngredients);
     setIngredient('');
     setCalories('');
+    setUnit('grams');
+  };
+
+  const convertCalories = (calories: number, unit: string) => {
+    const conversions = unitConversions[unit];
+    return {
+      caloriesPerGram: conversions.grams ? calories / conversions.grams : null,
+      caloriesPerMl: conversions.ml ? calories / conversions.ml : null,
+      caloriesPerCount: conversions.count ? calories / conversions.count : null,
+    };
   };
 
   const deleteIngredient = (index: number) => {
@@ -86,7 +126,7 @@ export default function IngredientsScreen() {
     }).start();
   };
 
-  const isCaloriesValid = !isNaN(parseInt(calories)) && isFinite(parseInt(calories)) && parseInt(calories) > 0;
+  const isCaloriesValid = !isNaN(parseFloat(calories)) && isFinite(parseFloat(calories)) && parseFloat(calories) > 0;
 
   const handleIngredientChange = (text: string) => {
     setIngredient(text);
@@ -120,6 +160,20 @@ export default function IngredientsScreen() {
           placeholder="Calories per unit"
           placeholderTextColor={scheme === 'dark' ? '#ccc' : '#888'}
         />
+        <Picker
+          selectedValue={unit}
+          onValueChange={(itemValue) => setUnit(itemValue)}
+          style={[commonStyles.picker, { color: textColor }]}
+          itemStyle={{ color: textColor }}
+        >
+          <Picker.Item label="Grams" value="grams" />
+          <Picker.Item label="Ounces" value="oz" />
+          <Picker.Item label="Teaspoons" value="teaspoons" />
+          <Picker.Item label="Tablespoons" value="tablespoons" />
+          <Picker.Item label="Cups" value="cups" />
+          <Picker.Item label="Milliliters" value="ml" />
+          <Picker.Item label="Count" value="count" />
+        </Picker>
         <Pressable
           onPressIn={() => handlePressIn(addButtonScale)}
           onPressOut={() => handlePressOut(addButtonScale)}
@@ -138,7 +192,9 @@ export default function IngredientsScreen() {
           renderItem={({ item, index }) => (
             <IngredientItem
               name={item.name}
-              calories={item.calories}
+              caloriesPerGram={item.caloriesPerGram}
+              caloriesPerMl={item.caloriesPerMl}
+              caloriesPerCount={item.caloriesPerCount}
               onDelete={() => deleteIngredient(index)}
             />
           )}

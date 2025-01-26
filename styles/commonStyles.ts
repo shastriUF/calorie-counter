@@ -11,6 +11,11 @@ export const commonStyles = StyleSheet.create({
     marginBottom: 20,
     paddingTop: 20,
   },
+  picker: {
+    width: '70%',
+    marginBottom: 20,
+    borderRadius: 10,
+  },
   input: {
     height: 40,
     borderWidth: 1,

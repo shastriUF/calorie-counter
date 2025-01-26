@@ -5,14 +5,19 @@ import { Ionicons } from '@expo/vector-icons';
 
 type IngredientItemProps = {
   name: string;
-  calories: number;
+  caloriesPerGram: number | null;
+  caloriesPerMl: number | null;
+  caloriesPerCount: number | null;
   onDelete: () => void;
 };
 
-export default function IngredientItem({ name, calories, onDelete }: IngredientItemProps) {
+export default function IngredientItem({ name, caloriesPerGram, caloriesPerMl, caloriesPerCount, onDelete }: IngredientItemProps) {
   return (
     <ThemedView style={styles.listItem}>
-      <ThemedText>{name}: {calories} calories</ThemedText>
+      <ThemedText>{name}</ThemedText>
+      {caloriesPerGram !== null && <ThemedText>Per Gram: {caloriesPerGram.toFixed(2)} cal</ThemedText>}
+      {caloriesPerMl !== null && <ThemedText>Per Ml: {caloriesPerMl.toFixed(2)} cal</ThemedText>}
+      {caloriesPerCount !== null && <ThemedText>Per Count: {caloriesPerCount.toFixed(2)} cal</ThemedText>}
       <TouchableOpacity onPress={onDelete}>
         <ThemedText style={styles.deleteText}>
           <Ionicons name="trash" /> Delete
@@ -24,9 +29,9 @@ export default function IngredientItem({ name, calories, onDelete }: IngredientI
 
 const styles = StyleSheet.create({
   listItem: {
-    flexDirection: 'row',
+    flexDirection: 'column',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     padding: 15,
     borderBottomWidth: 1,
     borderBottomColor: 'gray',
