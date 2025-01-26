@@ -201,9 +201,9 @@ export default function CaloriesScreen() {
           display="default"
           onChange={onDateChange}
         />
-        <ThemedText type="title" style={commonStyles.headerText}>Total Calories: {totalCalories}</ThemedText>
+        <ThemedText type="title" style={commonStyles.headerText}>Today: {totalCalories} cal</ThemedText>
         <TextInput
-          style={[commonStyles.input, { borderColor, color: textColor }]}
+          style={[commonStyles.input, { borderColor, color: textColor , marginBottom: 0 }]}
           value={ingredient}
           onChangeText={handleIngredientChange}
           placeholder="Enter ingredient"
@@ -233,7 +233,7 @@ export default function CaloriesScreen() {
           onPress={addCalories}
           disabled={!ingredient || !quantity || !isQuantityValid}
         >
-          <Animated.View style={{ transform: [{ scale: addButtonScale }] }}>
+          <Animated.View style={{ transform: [{ scale: addButtonScale }], marginBottom: 20 }}>
             <ThemedText style={commonStyles.buttonText}>
               <Ionicons name="add-circle-outline" size={16} /> Add
             </ThemedText>

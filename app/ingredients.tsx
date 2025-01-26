@@ -126,7 +126,7 @@ export default function IngredientsScreen() {
           onPress={addIngredient}
           disabled={!ingredient || !calories || !isCaloriesValid}
         >
-          <Animated.View style={{ transform: [{ scale: addButtonScale }] }}>
+          <Animated.View style={{ transform: [{ scale: addButtonScale }], marginBottom: 20 }}>
             <ThemedText style={commonStyles.buttonText}>
               <Ionicons name="add-circle-outline" size={16} /> Add
             </ThemedText>

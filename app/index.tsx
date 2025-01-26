@@ -25,13 +25,13 @@ export default function HomeScreen() {
   };
 
   return (
-    <ThemedView style={[commonStyles.container, { paddingTop: 50 }]}>
+    <ThemedView style={[commonStyles.container]}>
       <Link href="/calories" asChild>
         <Pressable
           onPressIn={() => handlePressIn(caloriesButtonScale)}
           onPressOut={() => handlePressOut(caloriesButtonScale)}
         >
-          <Animated.View style={{ transform: [{ scale: caloriesButtonScale }] }}>
+          <Animated.View style={{ transform: [{ scale: caloriesButtonScale }], marginBottom: 20 }}>
             <ThemedText style={commonStyles.buttonText}>
               <Ionicons name="stats-chart-outline" size={16} /> Track Calories
             </ThemedText>
