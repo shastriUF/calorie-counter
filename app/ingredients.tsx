@@ -143,12 +143,22 @@ export default function IngredientsScreen() {
     }
   };
 
+
+  const EXPORT_VERSION = 1.0;
+
   const exportData = async () => {
     try {
       const storedIngredients = await AsyncStorage.getItem('ingredients');
       if (storedIngredients) {
         const fileUri = FileSystem.documentDirectory + 'ingredients.json';
-        await FileSystem.writeAsStringAsync(fileUri, storedIngredients, { encoding: FileSystem.EncodingType.UTF8 });
+        
+        const parsedIngredients = JSON.parse(storedIngredients);
+        const data = {
+          version: EXPORT_VERSION,
+          ingredients: parsedIngredients,
+        };
+        
+        await FileSystem.writeAsStringAsync(fileUri, JSON.stringify(data), { encoding: FileSystem.EncodingType.UTF8 });
         await Sharing.shareAsync(fileUri);
       } else {
         Alert.alert('No data to export');
@@ -162,11 +172,23 @@ export default function IngredientsScreen() {
     try {
       const importedData = await FileSystem.readAsStringAsync(fileUri, { encoding: FileSystem.EncodingType.UTF8 });
       const parsedData = JSON.parse(importedData);
-      setIngredients(parsedData);
-      setFilteredIngredients(parsedData);
-      await AsyncStorage.setItem('ingredients', importedData);
+      
+      const version = parsedData.version;
+      if (version !== EXPORT_VERSION) {
+        throw new Error(`Incompatible data version. Current version is ${EXPORT_VERSION}, imported version is ${version}`);
+      }
+      
+      const ingredients = parsedData.ingredients;
+      setIngredients(ingredients);
+      setFilteredIngredients(ingredients);
+      saveIngredients(ingredients);
     } catch (error) {
       console.error('Failed to import data', error);
+      if (error instanceof Error) {
+        Alert.alert('Failed to import data', error.message);
+      } else {
+        Alert.alert('Failed to import data', 'An unknown error occurred');
+      }
     }
   };
 

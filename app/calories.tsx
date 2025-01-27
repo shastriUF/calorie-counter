@@ -225,13 +225,22 @@ export default function CaloriesScreen() {
     }
   };
 
+  const EXPORT_VERSION = 1.0;
+
   const exportData = async () => {
     try {
       const storedItems = await AsyncStorage.getItem(`consumedItems_${selectedDate.toLocaleDateString()}`);
       if (storedItems) {
         const date = selectedDate.toLocaleDateString().replace(/\//g, '-');
         const fileUri = FileSystem.documentDirectory + `calories_${date}.json`;
-        await FileSystem.writeAsStringAsync(fileUri, storedItems, { encoding: FileSystem.EncodingType.UTF8 });
+        
+        const parsedStoredItems = JSON.parse(storedItems);
+        const data = {
+          version: EXPORT_VERSION,
+          consumedItems: parsedStoredItems,
+        };
+        
+        await FileSystem.writeAsStringAsync(fileUri, JSON.stringify(data), { encoding: FileSystem.EncodingType.UTF8 });
         await Sharing.shareAsync(fileUri);
       } else {
         Alert.alert('No data to export');
@@ -245,11 +254,20 @@ export default function CaloriesScreen() {
     try {
       const importedData = await FileSystem.readAsStringAsync(fileUri, { encoding: FileSystem.EncodingType.UTF8 });
       const parsedData = JSON.parse(importedData);
-      setConsumedItems(parsedData);
-      await saveConsumedItems(parsedData);
+      const version = parsedData.version;
+      if (version !== EXPORT_VERSION) {
+        throw new Error(`Incompatible data version. Current version is ${EXPORT_VERSION}, imported version is ${version}`);
+      }
+      setConsumedItems(parsedData.consumedItems);
+      await saveConsumedItems(parsedData.consumedItems);
       await refreshCalories();
     } catch (error) {
       console.error('Failed to import data', error);
+      if (error instanceof Error) {
+        Alert.alert('Failed to import data', error.message);
+      } else {
+        Alert.alert('Failed to import data', 'An unknown error occurred');
+      }
     }
   };
 
