@@ -50,6 +50,8 @@ export default function CaloriesScreen() {
   const [errorMessage, setErrorMessage] = useState('');
   const [selectedDate, setSelectedDate] = useState(new Date());
   const addButtonScale = useRef(new Animated.Value(1)).current;
+  const exportButtonScale = useRef(new Animated.Value(1)).current;
+  const importButtonScale = useRef(new Animated.Value(1)).current;
   const refreshButtonScale = useRef(new Animated.Value(1)).current;
   const homeButtonScale = useRef(new Animated.Value(1)).current;
   const ingredientsButtonScale = useRef(new Animated.Value(1)).current;
@@ -398,22 +400,22 @@ export default function CaloriesScreen() {
           </Animated.View>
         </Pressable>
         <Pressable
-          onPressIn={() => handlePressIn(addButtonScale)}
-          onPressOut={() => handlePressOut(addButtonScale)}
+          onPressIn={() => handlePressIn(exportButtonScale)}
+          onPressOut={() => handlePressOut(exportButtonScale)}
           onPress={exportData}
         >
-          <Animated.View style={{ transform: [{ scale: addButtonScale }] }}>
+          <Animated.View style={{ transform: [{ scale: exportButtonScale }] }}>
             <ThemedText style={commonStyles.buttonText}>
               <Ionicons name="cloud-upload-outline" size={16} />
             </ThemedText>
           </Animated.View>
         </Pressable>
         <Pressable
-          onPressIn={() => handlePressIn(addButtonScale)}
-          onPressOut={() => handlePressOut(addButtonScale)}
+          onPressIn={() => handlePressIn(importButtonScale)}
+          onPressOut={() => handlePressOut(importButtonScale)}
           onPress={handleImportPress}
         >
-          <Animated.View style={{ transform: [{ scale: addButtonScale }] }}>
+          <Animated.View style={{ transform: [{ scale: importButtonScale }] }}>
             <ThemedText style={commonStyles.buttonText}>
               <Ionicons name="download-outline" size={16} />
             </ThemedText>
