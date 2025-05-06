@@ -31,6 +31,17 @@ In the output, you'll find options to open the app in a
 ## Re-building
 Rebuild by running `npx expo prebuild` or `cd ios && pod install`, followed by `npx expo run:ios --device`
 
+# Deploying
+
+1. Build on the cloud using EAS (limit 15 per month)
+  ```bash
+    npx eas build --platform ios
+  ```
+1. Once it is built, submit to TestFlight using EAS
+  ```bash
+    npx eas submit --platform ios
+  ```
+
 # Contributing
 
 You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
