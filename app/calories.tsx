@@ -227,7 +227,7 @@ export default function CaloriesScreen() {
     }
   };
 
-  const EXPORT_VERSION = 1.0;
+  const EXPORT_VERSION = 1.1;
 
   const exportData = async () => {
     try {
@@ -239,16 +239,18 @@ export default function CaloriesScreen() {
         const parsedStoredItems = JSON.parse(storedItems);
         const data = {
           version: EXPORT_VERSION,
+          date: selectedDate.toLocaleDateString(),
           consumedItems: parsedStoredItems,
         };
         
         await FileSystem.writeAsStringAsync(fileUri, JSON.stringify(data), { encoding: FileSystem.EncodingType.UTF8 });
         await Sharing.shareAsync(fileUri);
       } else {
-        Alert.alert('No data to export');
+        Alert.alert('No data to export', 'There is no calorie data for the selected date.');
       }
     } catch (error) {
       console.error('Failed to export data', error);
+      Alert.alert('Export Failed', 'Could not export calorie data.');
     }
   };
 
@@ -256,13 +258,37 @@ export default function CaloriesScreen() {
     try {
       const importedData = await FileSystem.readAsStringAsync(fileUri, { encoding: FileSystem.EncodingType.UTF8 });
       const parsedData = JSON.parse(importedData);
+      
+      // Check version compatibility
       const version = parsedData.version;
-      if (version !== EXPORT_VERSION) {
-        throw new Error(`Incompatible data version. Current version is ${EXPORT_VERSION}, imported version is ${version}`);
+      if (!version || version !== EXPORT_VERSION) {
+        throw new Error(`Incompatible data version. Current version is ${EXPORT_VERSION}, imported version is ${version || 'unknown'}`);
       }
-      setConsumedItems(parsedData.consumedItems);
-      await saveConsumedItems(parsedData.consumedItems);
-      await refreshCalories();
+      
+      // Import data
+      if (parsedData.consumedItems) {
+        // Handle date from the file vs. selected date
+        const importDate = parsedData.date;
+        
+        // Store the data with the appropriate date key
+        await AsyncStorage.setItem(`consumedItems_${importDate}`, JSON.stringify(parsedData.consumedItems));
+        
+        // If importing for the current selected date, update the UI
+        if (importDate === selectedDate.toLocaleDateString()) {
+          setConsumedItems(parsedData.consumedItems);
+          await refreshCalories();
+        }
+        
+        // Provide feedback about the imported date
+        Alert.alert(
+          'Import Successful', 
+          `Imported calorie data for ${importDate}${importDate !== selectedDate.toLocaleDateString() ? 
+            ' (Select this date to view the imported data)' : 
+            ''}`
+        );
+      } else {
+        throw new Error('No consumed items found in the imported file.');
+      }
     } catch (error) {
       console.error('Failed to import data', error);
       if (error instanceof Error) {
