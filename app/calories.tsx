@@ -46,7 +46,7 @@ export default function CaloriesScreen() {
   const [ingredient, setIngredient] = useState('');
   const [quantity, setQuantity] = useState('');
   const [unit, setUnit] = useState('grams');
-  const [meal, setMeal] = useState('Other');
+  const [activeMeal, setActiveMeal] = useState('Other');
   const [selectedMealFilter, setSelectedMealFilter] = useState<string | null>(null);
   const [totalCalories, setTotalCalories] = useState(0);
   const [consumedItems, setConsumedItems] = useState<ConsumedItem[]>([]);
@@ -136,7 +136,7 @@ export default function CaloriesScreen() {
       }
 
       const newTotalCalories = totalCalories + calories;
-      const newConsumedItems = [...consumedItems, { name: ingredient, quantity: quantity_num, unit, calories, meal }];
+      const newConsumedItems = [...consumedItems, { name: ingredient, quantity: quantity_num, unit, calories, meal: activeMeal }];
       setTotalCalories(newTotalCalories);
       setConsumedItems(newConsumedItems);
       saveConsumedItems(newConsumedItems);
@@ -417,6 +417,26 @@ export default function CaloriesScreen() {
             </Pressable>
           ))}
         </View>
+        <ThemedText style={{ marginBottom: 5, marginTop: 10 }}>Select meal type:</ThemedText>
+        <View style={styles.mealBreakdown}>
+          {mealTypes.map(mealType => (
+            <Pressable 
+              key={mealType} 
+              style={[
+                styles.mealPill,
+                activeMeal === mealType ? styles.selectedMealPill : null
+              ]}
+              onPress={() => setActiveMeal(mealType)}
+            >
+              <ThemedText style={[
+                styles.mealPillText,
+                activeMeal === mealType ? { color: 'blue' } : null
+              ]}>
+                {mealType}
+              </ThemedText>
+            </Pressable>
+          ))}
+        </View>
         <TextInput
           style={[commonStyles.input, { borderColor, color: textColor , marginBottom: 0 }]}
           value={ingredient}
@@ -454,17 +474,6 @@ export default function CaloriesScreen() {
           <Picker.Item label="Cups" value="cups" />
           <Picker.Item label="Milliliters" value="ml" />
           <Picker.Item label="Count" value="count" />
-        </Picker>
-        <ThemedText>Meal:</ThemedText>
-        <Picker
-          selectedValue={meal}
-          onValueChange={(itemValue) => setMeal(itemValue)}
-          style={[commonStyles.picker, { color: textColor }]}
-          itemStyle={{ color: textColor }}
-        >
-          {mealTypes.map(mealType => (
-            <Picker.Item key={mealType} label={mealType} value={mealType} />
-          ))}
         </Picker>
         <Pressable
           onPressIn={() => handlePressIn(addButtonScale)}
