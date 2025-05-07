@@ -410,7 +410,6 @@ export default function CaloriesScreen() {
           onChange={onDateChange}
         />
         <ThemedText type="title" style={commonStyles.headerText}>Today: {totalCalories} cal</ThemedText>
-        <ThemedText style={{ marginBottom: 5 }}>Select meal:</ThemedText>
         <View style={styles.mealBreakdown}>
           {mealTypes.map(mealType => {
             // Determine styling based on whether it's selected for filtering or active for adding
@@ -438,9 +437,6 @@ export default function CaloriesScreen() {
             );
           })}
         </View>
-        <ThemedText style={styles.activeMealIndicator}>
-          Adding to: {activeMeal}
-        </ThemedText>
         <TextInput
           style={[commonStyles.input, { borderColor, color: textColor , marginBottom: 0 }]}
           value={ingredient}
@@ -612,11 +608,5 @@ const styles = StyleSheet.create({
   },
   mealPillText: {
     fontSize: 12,
-  },
-  activeMealIndicator: {
-    fontSize: 14,
-    fontStyle: 'italic',
-    marginTop: 5,
-    marginBottom: 15,
   },
 });
