@@ -428,8 +428,8 @@ export default function CaloriesScreen() {
               >
                 <ThemedText style={[
                   styles.mealPillText,
-                  isFilterActive ? { color: 'white' } : null,
-                  isActiveForAdding && !isFilterActive ? { color: '#0a7ea4' } : null
+                  isFilterActive ? styles.filterActiveText : null,
+                  isActiveForAdding && !isFilterActive ? styles.addingActiveText : null
                 ]}>
                   {mealType}: {caloriesByMeal[mealType] || 0}
                 </ThemedText>
@@ -608,5 +608,11 @@ const styles = StyleSheet.create({
   },
   mealPillText: {
     fontSize: 12,
+  },
+  filterActiveText: {
+    color: 'white',
+  },
+  addingActiveText: {
+    color: '#0a7ea4',
   },
 });
