@@ -15,9 +15,9 @@ export default function IngredientItem({ name, caloriesPerGram, caloriesPerMl, c
   return (
     <ThemedView style={styles.listItem}>
       <ThemedText>{name}</ThemedText>
-      {caloriesPerGram !== null && <ThemedText>Per Gram: {caloriesPerGram.toFixed(2)} cal</ThemedText>}
-      {caloriesPerMl !== null && <ThemedText>Per ML: {caloriesPerMl.toFixed(2)} cal</ThemedText>}
-      {caloriesPerCount !== null && <ThemedText>Per Count: {caloriesPerCount.toFixed(2)} cal</ThemedText>}
+      {caloriesPerGram !== null && caloriesPerGram !== undefined && <ThemedText>Per Gram: {caloriesPerGram.toFixed(2)} cal</ThemedText>}
+      {caloriesPerMl !== null && caloriesPerMl !== undefined && <ThemedText>Per ML: {caloriesPerMl.toFixed(2)} cal</ThemedText>}
+      {caloriesPerCount !== null && caloriesPerCount !== undefined && <ThemedText>Per Count: {caloriesPerCount.toFixed(2)} cal</ThemedText>}
       <TouchableOpacity onPress={onDelete}>
         <ThemedText style={styles.deleteText}>
           <Ionicons name="trash" /> Delete
