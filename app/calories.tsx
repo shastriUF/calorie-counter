@@ -40,13 +40,13 @@ const unitConversions: { [key: string]: { grams?: number; ml?: number; count?: n
   count: { count: 1 },
 };
 
-const mealTypes = ['Breakfast', 'Lunch', 'Dinner', 'Snack', 'Other'];
+const mealTypes = ['Breakfast', 'Lunch', 'Dinner', 'Snack'];
 
 export default function CaloriesScreen() {
   const [ingredient, setIngredient] = useState('');
   const [quantity, setQuantity] = useState('');
   const [unit, setUnit] = useState('grams');
-  const [activeMeal, setActiveMeal] = useState('Other');
+  const [activeMeal, setActiveMeal] = useState('Snack');
   const [selectedMealFilter, setSelectedMealFilter] = useState<string | null>(null);
   const [totalCalories, setTotalCalories] = useState(0);
   const [consumedItems, setConsumedItems] = useState<ConsumedItem[]>([]);
@@ -146,7 +146,6 @@ export default function CaloriesScreen() {
     }
     setIngredient('');
     setQuantity('');
-    setUnit('grams');
   };
 
   const deleteConsumedItem = (index: number) => {
@@ -373,6 +372,18 @@ export default function CaloriesScreen() {
     }
   };
 
+  const handleMealSelection = (mealType: string) => {
+    // For filtering: toggle filter on/off without changing active meal
+    if (selectedMealFilter === mealType) {
+      setSelectedMealFilter(null);
+    } else {
+      setSelectedMealFilter(mealType);
+    }
+    
+    // Always set as active meal when clicked
+    setActiveMeal(mealType);
+  };
+
   const filteredConsumedItems = selectedMealFilter 
     ? consumedItems.filter(item => item.meal === selectedMealFilter)
     : consumedItems;
@@ -399,44 +410,37 @@ export default function CaloriesScreen() {
           onChange={onDateChange}
         />
         <ThemedText type="title" style={commonStyles.headerText}>Today: {totalCalories} cal</ThemedText>
+        <ThemedText style={{ marginBottom: 5 }}>Select meal:</ThemedText>
         <View style={styles.mealBreakdown}>
-          {mealTypes.map(mealType => (
-            <Pressable 
-              key={mealType} 
-              style={[
-                styles.mealPill,
-                selectedMealFilter === mealType ? styles.selectedMealPill : null
-              ]}
-              onPress={() => setSelectedMealFilter(
-                selectedMealFilter === mealType ? null : mealType
-              )}
-            >
-              <ThemedText style={styles.mealPillText}>
-                {mealType}: {caloriesByMeal[mealType] || 0}
-              </ThemedText>
-            </Pressable>
-          ))}
+          {mealTypes.map(mealType => {
+            // Determine styling based on whether it's selected for filtering or active for adding
+            const isFilterActive = selectedMealFilter === mealType;
+            const isActiveForAdding = activeMeal === mealType;
+            
+            return (
+              <Pressable 
+                key={mealType} 
+                style={[
+                  styles.mealPill,
+                  isFilterActive ? styles.filterActivePill : null,
+                  isActiveForAdding ? styles.addingActivePill : null
+                ]}
+                onPress={() => handleMealSelection(mealType)}
+              >
+                <ThemedText style={[
+                  styles.mealPillText,
+                  isFilterActive ? { color: 'white' } : null,
+                  isActiveForAdding && !isFilterActive ? { color: '#0a7ea4' } : null
+                ]}>
+                  {mealType}: {caloriesByMeal[mealType] || 0}
+                </ThemedText>
+              </Pressable>
+            );
+          })}
         </View>
-        <ThemedText style={{ marginBottom: 5, marginTop: 10 }}>Select meal type:</ThemedText>
-        <View style={styles.mealBreakdown}>
-          {mealTypes.map(mealType => (
-            <Pressable 
-              key={mealType} 
-              style={[
-                styles.mealPill,
-                activeMeal === mealType ? styles.selectedMealPill : null
-              ]}
-              onPress={() => setActiveMeal(mealType)}
-            >
-              <ThemedText style={[
-                styles.mealPillText,
-                activeMeal === mealType ? { color: 'blue' } : null
-              ]}>
-                {mealType}
-              </ThemedText>
-            </Pressable>
-          ))}
-        </View>
+        <ThemedText style={styles.activeMealIndicator}>
+          Adding to: {activeMeal}
+        </ThemedText>
         <TextInput
           style={[commonStyles.input, { borderColor, color: textColor , marginBottom: 0 }]}
           value={ingredient}
@@ -596,11 +600,23 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 5,
     margin: 3,
+    borderWidth: 1,
+    borderColor: 'transparent',
   },
-  selectedMealPill: {
+  filterActivePill: {
     backgroundColor: '#0a7ea4',
+  },
+  addingActivePill: {
+    borderColor: '#0a7ea4',
+    borderWidth: 1,
   },
   mealPillText: {
     fontSize: 12,
+  },
+  activeMealIndicator: {
+    fontSize: 14,
+    fontStyle: 'italic',
+    marginTop: 5,
+    marginBottom: 15,
   },
 });
