@@ -55,12 +55,11 @@ export default function CaloriesScreen() {
   const [errorMessage, setErrorMessage] = useState('');
   const [selectedDate, setSelectedDate] = useState(new Date());
   const addButtonScale = useRef(new Animated.Value(1)).current;
-  const exportButtonScale = useRef(new Animated.Value(1)).current;
   const importButtonScale = useRef(new Animated.Value(1)).current;
   const refreshButtonScale = useRef(new Animated.Value(1)).current;
   const homeButtonScale = useRef(new Animated.Value(1)).current;
   const ingredientsButtonScale = useRef(new Animated.Value(1)).current;
-  const mealExportButtonScale = useRef(new Animated.Value(1)).current;
+  const exportButtonScale = useRef(new Animated.Value(1)).current;
   const scheme = useColorScheme();
   const backgroundColor = useThemeColor({}, 'background');
   const textColor = useThemeColor({}, 'text');
@@ -234,18 +233,36 @@ export default function CaloriesScreen() {
 
   const EXPORT_VERSION = 1.1;
 
-  const exportData = async () => {
+  const exportData = async (mealType: string | null = null) => {
     try {
       const storedItems = await AsyncStorage.getItem(`consumedItems_${selectedDate.toLocaleDateString()}`);
       if (storedItems) {
-        const date = selectedDate.toLocaleDateString().replace(/\//g, '-');
-        const fileUri = FileSystem.documentDirectory + `calories_${date}.json`;
+        let parsedStoredItems = JSON.parse(storedItems);
+        let exportItems;
+        let fileNameSuffix;
         
-        const parsedStoredItems = JSON.parse(storedItems);
+        // Filter by meal type if specified
+        if (mealType && mealType !== "Full day") {
+          exportItems = parsedStoredItems.filter((item: ConsumedItem) => item.meal === mealType);
+          if (exportItems.length === 0) {
+            Alert.alert('No data to export', `There are no ${mealType} items for the selected date.`);
+            return;
+          }
+          fileNameSuffix = `_${mealType.toLowerCase()}`;
+        } else {
+          // Export all items (full day)
+          exportItems = parsedStoredItems;
+          fileNameSuffix = '';
+        }
+
+        const date = selectedDate.toLocaleDateString().replace(/\//g, '-');
+        const fileUri = FileSystem.documentDirectory + `calories_${date}${fileNameSuffix}.json`;
+        
         const data = {
           version: EXPORT_VERSION,
           date: selectedDate.toLocaleDateString(),
-          consumedItems: parsedStoredItems,
+          meal: mealType !== "Full day" ? mealType : undefined,
+          consumedItems: exportItems,
         };
         
         await FileSystem.writeAsStringAsync(fileUri, JSON.stringify(data), { encoding: FileSystem.EncodingType.UTF8 });
@@ -256,32 +273,6 @@ export default function CaloriesScreen() {
     } catch (error) {
       console.error('Failed to export data', error);
       Alert.alert('Export Failed', 'Could not export calorie data.');
-    }
-  };
-
-  const exportMeal = async (mealType: string) => {
-    try {
-      const mealItems = consumedItems.filter(item => item.meal === mealType);
-      if (mealItems.length === 0) {
-        Alert.alert('No data to export', `There are no ${mealType} items for the selected date.`);
-        return;
-      }
-
-      const date = selectedDate.toLocaleDateString().replace(/\//g, '-');
-      const fileUri = FileSystem.documentDirectory + `calories_${date}_${mealType.toLowerCase()}.json`;
-      
-      const data = {
-        version: EXPORT_VERSION,
-        date: selectedDate.toLocaleDateString(),
-        meal: mealType,
-        consumedItems: mealItems,
-      };
-      
-      await FileSystem.writeAsStringAsync(fileUri, JSON.stringify(data), { encoding: FileSystem.EncodingType.UTF8 });
-      await Sharing.shareAsync(fileUri);
-    } catch (error) {
-      console.error('Failed to export meal data', error);
-      Alert.alert('Export Failed', 'Could not export meal data.');
     }
   };
 
@@ -545,32 +536,22 @@ export default function CaloriesScreen() {
           </Pressable>
           
           <Pressable
-            onPressIn={() => handlePressIn(mealExportButtonScale)}
-            onPressOut={() => handlePressOut(mealExportButtonScale)}
+            onPressIn={() => handlePressIn(exportButtonScale)}
+            onPressOut={() => handlePressOut(exportButtonScale)}
             onPress={() => {
               Alert.alert(
-                'Export Meal',
-                'Select a meal to export:',
+                'Export Data',
+                'Select what to export:',
                 [
+                  { text: 'Full day', onPress: () => exportData("Full day") },
                   ...mealTypes.map(mealType => ({
                     text: mealType,
-                    onPress: () => exportMeal(mealType)
+                    onPress: () => exportData(mealType)
                   })),
                   { text: 'Cancel', style: 'cancel' }
                 ]
               );
             }}
-            style={commonStyles.iconButton}
-          >
-            <Animated.View style={{ transform: [{ scale: mealExportButtonScale }] }}>
-              <Ionicons name="fast-food-outline" size={20} color={textColor} />
-            </Animated.View>
-          </Pressable>
-          
-          <Pressable
-            onPressIn={() => handlePressIn(exportButtonScale)}
-            onPressOut={() => handlePressOut(exportButtonScale)}
-            onPress={exportData}
             style={commonStyles.iconButton}
           >
             <Animated.View style={{ transform: [{ scale: exportButtonScale }] }}>
