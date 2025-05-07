@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { TextInput, ScrollView, Animated, Pressable, useColorScheme, View, Alert } from 'react-native';
+import { TextInput, ScrollView, Animated, Pressable, useColorScheme, View, Alert, StyleSheet } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { Link } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -27,6 +27,7 @@ type ConsumedItem = {
   quantity: number;
   unit: string;
   calories: number;
+  meal: string;
 };
 
 const unitConversions: { [key: string]: { grams?: number; ml?: number; count?: number } } = {
@@ -39,10 +40,14 @@ const unitConversions: { [key: string]: { grams?: number; ml?: number; count?: n
   count: { count: 1 },
 };
 
+const mealTypes = ['Breakfast', 'Lunch', 'Dinner', 'Snack', 'Other'];
+
 export default function CaloriesScreen() {
   const [ingredient, setIngredient] = useState('');
   const [quantity, setQuantity] = useState('');
   const [unit, setUnit] = useState('grams');
+  const [meal, setMeal] = useState('Other');
+  const [selectedMealFilter, setSelectedMealFilter] = useState<string | null>(null);
   const [totalCalories, setTotalCalories] = useState(0);
   const [consumedItems, setConsumedItems] = useState<ConsumedItem[]>([]);
   const [ingredientsData, setIngredientsData] = useState<Ingredient[]>([]);
@@ -131,7 +136,7 @@ export default function CaloriesScreen() {
       }
 
       const newTotalCalories = totalCalories + calories;
-      const newConsumedItems = [...consumedItems, { name: ingredient, quantity: quantity_num, unit, calories }];
+      const newConsumedItems = [...consumedItems, { name: ingredient, quantity: quantity_num, unit, calories, meal }];
       setTotalCalories(newTotalCalories);
       setConsumedItems(newConsumedItems);
       saveConsumedItems(newConsumedItems);
@@ -254,6 +259,32 @@ export default function CaloriesScreen() {
     }
   };
 
+  const exportMeal = async (mealType: string) => {
+    try {
+      const mealItems = consumedItems.filter(item => item.meal === mealType);
+      if (mealItems.length === 0) {
+        Alert.alert('No data to export', `There are no ${mealType} items for the selected date.`);
+        return;
+      }
+
+      const date = selectedDate.toLocaleDateString().replace(/\//g, '-');
+      const fileUri = FileSystem.documentDirectory + `calories_${date}_${mealType.toLowerCase()}.json`;
+      
+      const data = {
+        version: EXPORT_VERSION,
+        date: selectedDate.toLocaleDateString(),
+        meal: mealType,
+        consumedItems: mealItems,
+      };
+      
+      await FileSystem.writeAsStringAsync(fileUri, JSON.stringify(data), { encoding: FileSystem.EncodingType.UTF8 });
+      await Sharing.shareAsync(fileUri);
+    } catch (error) {
+      console.error('Failed to export meal data', error);
+      Alert.alert('Export Failed', 'Could not export meal data.');
+    }
+  };
+
   const importData = async (fileUri: string) => {
     try {
       const importedData = await FileSystem.readAsStringAsync(fileUri, { encoding: FileSystem.EncodingType.UTF8 });
@@ -270,22 +301,54 @@ export default function CaloriesScreen() {
         // Handle date from the file vs. selected date
         const importDate = parsedData.date;
         
-        // Store the data with the appropriate date key
-        await AsyncStorage.setItem(`consumedItems_${importDate}`, JSON.stringify(parsedData.consumedItems));
+        // See if it's a full day or just a meal
+        const isMealImport = parsedData.meal !== undefined;
         
-        // If importing for the current selected date, update the UI
-        if (importDate === selectedDate.toLocaleDateString()) {
-          setConsumedItems(parsedData.consumedItems);
-          await refreshCalories();
+        if (isMealImport) {
+          // If it's a meal import, we need to merge with existing data
+          const storedItems = await AsyncStorage.getItem(`consumedItems_${importDate}`);
+          let existingItems: ConsumedItem[] = [];
+          
+          if (storedItems) {
+            existingItems = JSON.parse(storedItems);
+            // Remove any items of the same meal type to avoid duplicates
+            if (parsedData.meal) {
+              existingItems = existingItems.filter(item => 
+                !item.meal || item.meal !== parsedData.meal);
+            }
+          }
+          
+          // Merge existing items with imported meal items
+          const mergedItems = [...existingItems, ...parsedData.consumedItems];
+          await AsyncStorage.setItem(`consumedItems_${importDate}`, JSON.stringify(mergedItems));
+          
+          if (importDate === selectedDate.toLocaleDateString()) {
+            setConsumedItems(mergedItems);
+            await refreshCalories();
+          }
+          
+          Alert.alert(
+            'Import Successful', 
+            `Imported ${parsedData.meal} data for ${importDate}${importDate !== selectedDate.toLocaleDateString() ? 
+              ' (Select this date to view the imported data)' : 
+              ''}`
+          );
+        } else {
+          // Handle full day import (old logic)
+          await AsyncStorage.setItem(`consumedItems_${importDate}`, JSON.stringify(parsedData.consumedItems));
+          
+          if (importDate === selectedDate.toLocaleDateString()) {
+            setConsumedItems(parsedData.consumedItems);
+            await refreshCalories();
+          }
+          
+          Alert.alert(
+            'Import Successful', 
+            `Imported calorie data for ${importDate}${importDate !== selectedDate.toLocaleDateString() ? 
+              ' (Select this date to view the imported data)' : 
+              ''}`
+          );
         }
-        
-        // Provide feedback about the imported date
-        Alert.alert(
-          'Import Successful', 
-          `Imported calorie data for ${importDate}${importDate !== selectedDate.toLocaleDateString() ? 
-            ' (Select this date to view the imported data)' : 
-            ''}`
-        );
       } else {
         throw new Error('No consumed items found in the imported file.');
       }
@@ -310,6 +373,16 @@ export default function CaloriesScreen() {
     }
   };
 
+  const filteredConsumedItems = selectedMealFilter 
+    ? consumedItems.filter(item => item.meal === selectedMealFilter)
+    : consumedItems;
+
+  const caloriesByMeal = mealTypes.reduce((meals, mealType) => {
+    const mealItems = consumedItems.filter(item => item.meal === mealType);
+    const totalCaloriesForMeal = mealItems.reduce((sum, item) => sum + item.calories, 0);
+    return { ...meals, [mealType]: totalCaloriesForMeal };
+  }, {} as Record<string, number>);
+
   return (
     <ThemedView style={[commonStyles.container, { backgroundColor, paddingTop: 100 }]}>
       <ScrollView style={{ width: '100%' }} contentContainerStyle={{ flexGrow: 1, alignItems: 'center' }}>
@@ -326,6 +399,24 @@ export default function CaloriesScreen() {
           onChange={onDateChange}
         />
         <ThemedText type="title" style={commonStyles.headerText}>Today: {totalCalories} cal</ThemedText>
+        <View style={styles.mealBreakdown}>
+          {mealTypes.map(mealType => (
+            <Pressable 
+              key={mealType} 
+              style={[
+                styles.mealPill,
+                selectedMealFilter === mealType ? styles.selectedMealPill : null
+              ]}
+              onPress={() => setSelectedMealFilter(
+                selectedMealFilter === mealType ? null : mealType
+              )}
+            >
+              <ThemedText style={styles.mealPillText}>
+                {mealType}: {caloriesByMeal[mealType] || 0}
+              </ThemedText>
+            </Pressable>
+          ))}
+        </View>
         <TextInput
           style={[commonStyles.input, { borderColor, color: textColor , marginBottom: 0 }]}
           value={ingredient}
@@ -364,6 +455,17 @@ export default function CaloriesScreen() {
           <Picker.Item label="Milliliters" value="ml" />
           <Picker.Item label="Count" value="count" />
         </Picker>
+        <ThemedText>Meal:</ThemedText>
+        <Picker
+          selectedValue={meal}
+          onValueChange={(itemValue) => setMeal(itemValue)}
+          style={[commonStyles.picker, { color: textColor }]}
+          itemStyle={{ color: textColor }}
+        >
+          {mealTypes.map(mealType => (
+            <Picker.Item key={mealType} label={mealType} value={mealType} />
+          ))}
+        </Picker>
         <Pressable
           onPressIn={() => handlePressIn(addButtonScale)}
           onPressOut={() => handlePressOut(addButtonScale)}
@@ -377,17 +479,18 @@ export default function CaloriesScreen() {
           </Animated.View>
         </Pressable>
         <ScrollView style={{ width: '100%' }} contentContainerStyle={{ flexGrow: 1 }}>
-          {consumedItems.map((item, index) => (
+          {filteredConsumedItems.map((item, index) => (
             <ConsumedItemEntry
               key={index}
               name={item.name}
               quantity={item.quantity}
               unit={item.unit}
               calories={item.calories}
+              meal={item.meal}
               onDelete={() => deleteConsumedItem(index)}
             />
           ))}
-        </ScrollView>
+          </ScrollView>
       </ScrollView>
       <ThemedView style={commonStyles.buttonRow}>
         <Link href="/" asChild>
@@ -426,6 +529,25 @@ export default function CaloriesScreen() {
           </Animated.View>
         </Pressable>
         <Pressable
+          onPress={() => {
+            Alert.alert(
+              'Export Meal',
+              'Select a meal to export:',
+              [
+                ...mealTypes.map(mealType => ({
+                  text: mealType,
+                  onPress: () => exportMeal(mealType)
+                })),
+                { text: 'Cancel', style: 'cancel' }
+              ]
+            );
+          }}
+        >
+          <ThemedText style={commonStyles.buttonText}>
+            <Ionicons name="fast-food-outline" size={16} />
+          </ThemedText>
+        </Pressable>
+        <Pressable
           onPressIn={() => handlePressIn(exportButtonScale)}
           onPressOut={() => handlePressOut(exportButtonScale)}
           onPress={exportData}
@@ -451,3 +573,25 @@ export default function CaloriesScreen() {
     </ThemedView>
   );
 }
+
+const styles = StyleSheet.create({
+  mealBreakdown: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    marginBottom: 15,
+  },
+  mealPill: {
+    backgroundColor: '#e0e0e0',
+    borderRadius: 15,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    margin: 3,
+  },
+  selectedMealPill: {
+    backgroundColor: '#0a7ea4',
+  },
+  mealPillText: {
+    fontSize: 12,
+  },
+});
