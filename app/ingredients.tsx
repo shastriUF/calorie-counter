@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { TextInput, ScrollView, Animated, Pressable, useColorScheme, Alert } from 'react-native';
+import { TextInput, ScrollView, Animated, Pressable, useColorScheme, Alert, View } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { Link } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -206,8 +206,24 @@ export default function IngredientsScreen() {
   };
 
   return (
-    <ThemedView style={[commonStyles.container, { backgroundColor, paddingTop: 100 }]}>
-      <ScrollView style={{ width: '100%' }} contentContainerStyle={{ flexGrow: 1, alignItems: 'center' }}>
+    <ThemedView style={[commonStyles.container, { backgroundColor, paddingTop: 60 }]}>
+      {/* Back button at top left */}
+      <View style={commonStyles.topNav}>
+        <Link href="/" asChild>
+          <Pressable
+            onPressIn={() => handlePressIn(homeButtonScale)}
+            onPressOut={() => handlePressOut(homeButtonScale)}
+            style={commonStyles.backButton}
+          >
+            <Animated.View style={[{ transform: [{ scale: homeButtonScale }] }, commonStyles.backButtonContainer]}>
+              <Ionicons name="chevron-back" size={18} color="#007AFF" />
+              <ThemedText style={commonStyles.backButtonText}>Home</ThemedText>
+            </Animated.View>
+          </Pressable>
+        </Link>
+      </View>
+      
+      <ScrollView style={{ width: '100%', marginTop: 10 }} contentContainerStyle={{ flexGrow: 1, alignItems: 'center' }}>
         <StatusBar />
         <ThemedText type="title" style={commonStyles.headerText}>Add Ingredient</ThemedText>
         <TextInput
@@ -265,18 +281,6 @@ export default function IngredientsScreen() {
         </ScrollView>
       </ScrollView>
       <ThemedView style={commonStyles.buttonRow}>
-        <Link href="/" asChild>
-          <Pressable
-            onPressIn={() => handlePressIn(homeButtonScale)}
-            onPressOut={() => handlePressOut(homeButtonScale)}
-          >
-            <Animated.View style={{ transform: [{ scale: homeButtonScale }] }}>
-              <ThemedText style={commonStyles.buttonText}>
-                <Ionicons name="home-outline" size={16} />
-              </ThemedText>
-            </Animated.View>
-          </Pressable>
-        </Link>
         <Link href="/calories" asChild>
           <Pressable
             onPressIn={() => handlePressIn(trackButtonScale)}
@@ -289,28 +293,30 @@ export default function IngredientsScreen() {
             </Animated.View>
           </Pressable>
         </Link>
-        <Pressable
-          onPressIn={() => handlePressIn(exportButtonScale)}
-          onPressOut={() => handlePressOut(exportButtonScale)}
-          onPress={exportData}
-        >
-          <Animated.View style={{ transform: [{ scale: exportButtonScale }] }}>
-            <ThemedText style={commonStyles.buttonText}>
-              <Ionicons name="cloud-upload-outline" size={16} />
-            </ThemedText>
-          </Animated.View>
-        </Pressable>
-        <Pressable
-          onPressIn={() => handlePressIn(importButtonScale)}
-          onPressOut={() => handlePressOut(importButtonScale)}
-          onPress={handleImportPress}
-        >
-          <Animated.View style={{ transform: [{ scale: importButtonScale }] }}>
-            <ThemedText style={commonStyles.buttonText}>
-              <Ionicons name="download-outline" size={16} />
-            </ThemedText>
-          </Animated.View>
-        </Pressable>
+        
+        <View style={commonStyles.buttonGroup}>
+          <Pressable
+            onPressIn={() => handlePressIn(exportButtonScale)}
+            onPressOut={() => handlePressOut(exportButtonScale)}
+            onPress={exportData}
+            style={commonStyles.iconButton}
+          >
+            <Animated.View style={{ transform: [{ scale: exportButtonScale }] }}>
+              <Ionicons name="cloud-upload-outline" size={20} color={textColor} />
+            </Animated.View>
+          </Pressable>
+          
+          <Pressable
+            onPressIn={() => handlePressIn(importButtonScale)}
+            onPressOut={() => handlePressOut(importButtonScale)}
+            onPress={handleImportPress}
+            style={commonStyles.iconButton}
+          >
+            <Animated.View style={{ transform: [{ scale: importButtonScale }] }}>
+              <Ionicons name="download-outline" size={20} color={textColor} />
+            </Animated.View>
+          </Pressable>
+        </View>
       </ThemedView>
     </ThemedView>
   );

@@ -60,6 +60,7 @@ export default function CaloriesScreen() {
   const refreshButtonScale = useRef(new Animated.Value(1)).current;
   const homeButtonScale = useRef(new Animated.Value(1)).current;
   const ingredientsButtonScale = useRef(new Animated.Value(1)).current;
+  const mealExportButtonScale = useRef(new Animated.Value(1)).current;
   const scheme = useColorScheme();
   const backgroundColor = useThemeColor({}, 'background');
   const textColor = useThemeColor({}, 'text');
@@ -395,14 +396,30 @@ export default function CaloriesScreen() {
   }, {} as Record<string, number>);
 
   return (
-    <ThemedView style={[commonStyles.container, { backgroundColor, paddingTop: 100 }]}>
-      <ScrollView style={{ width: '100%' }} contentContainerStyle={{ flexGrow: 1, alignItems: 'center' }}>
+    <ThemedView style={[commonStyles.container, { backgroundColor, paddingTop: 60 }]}>
+      {/* Back button at top left */}
+      <View style={commonStyles.topNav}>
+        <Link href="/" asChild>
+          <Pressable
+            onPressIn={() => handlePressIn(homeButtonScale)}
+            onPressOut={() => handlePressOut(homeButtonScale)}
+            style={commonStyles.backButton}
+          >
+            <Animated.View style={[{ transform: [{ scale: homeButtonScale }] }, commonStyles.backButtonContainer]}>
+              <Ionicons name="chevron-back" size={18} color="#007AFF" />
+              <ThemedText style={commonStyles.backButtonText}>Home</ThemedText>
+            </Animated.View>
+          </Pressable>
+        </Link>
+      </View>
+      
+      <ScrollView style={{ width: '100%', marginTop: 10 }} contentContainerStyle={{ flexGrow: 1, alignItems: 'center' }}>
         <StatusBar />
-          {errorMessage ? (
-            <ThemedView style={commonStyles.errorBanner}>
-              <ThemedText style={commonStyles.errorText}>{errorMessage}</ThemedText>
-            </ThemedView>
-          ) : null}
+        {errorMessage ? (
+          <ThemedView style={commonStyles.errorBanner}>
+            <ThemedText style={commonStyles.errorText}>{errorMessage}</ThemedText>
+          </ThemedView>
+        ) : null}
         <DateTimePicker
           value={selectedDate}
           mode="date"
@@ -502,18 +519,6 @@ export default function CaloriesScreen() {
           </ScrollView>
       </ScrollView>
       <ThemedView style={commonStyles.buttonRow}>
-        <Link href="/" asChild>
-          <Pressable
-            onPressIn={() => handlePressIn(homeButtonScale)}
-            onPressOut={() => handlePressOut(homeButtonScale)}
-          >
-            <Animated.View style={{ transform: [{ scale: homeButtonScale }] }}>
-              <ThemedText style={commonStyles.buttonText}>
-                <Ionicons name="home-outline" size={16} />
-              </ThemedText>
-            </Animated.View>
-          </Pressable>
-        </Link>
         <Link href="/ingredients" asChild>
           <Pressable
             onPressIn={() => handlePressIn(ingredientsButtonScale)}
@@ -526,58 +531,64 @@ export default function CaloriesScreen() {
             </Animated.View>
           </Pressable>
         </Link>
-        <Pressable
-          onPressIn={() => handlePressIn(refreshButtonScale)}
-          onPressOut={() => handlePressOut(refreshButtonScale)}
-          onPress={refreshCalories}
-        >
-          <Animated.View style={{ transform: [{ scale: refreshButtonScale }] }}>
-            <ThemedText style={commonStyles.buttonText}>
-              <Ionicons name="reload" size={16} />
-            </ThemedText>
-          </Animated.View>
-        </Pressable>
-        <Pressable
-          onPress={() => {
-            Alert.alert(
-              'Export Meal',
-              'Select a meal to export:',
-              [
-                ...mealTypes.map(mealType => ({
-                  text: mealType,
-                  onPress: () => exportMeal(mealType)
-                })),
-                { text: 'Cancel', style: 'cancel' }
-              ]
-            );
-          }}
-        >
-          <ThemedText style={commonStyles.buttonText}>
-            <Ionicons name="fast-food-outline" size={16} />
-          </ThemedText>
-        </Pressable>
-        <Pressable
-          onPressIn={() => handlePressIn(exportButtonScale)}
-          onPressOut={() => handlePressOut(exportButtonScale)}
-          onPress={exportData}
-        >
-          <Animated.View style={{ transform: [{ scale: exportButtonScale }] }}>
-            <ThemedText style={commonStyles.buttonText}>
-              <Ionicons name="cloud-upload-outline" size={16} />
-            </ThemedText>
-          </Animated.View>
-        </Pressable>
-        <Pressable
-          onPressIn={() => handlePressIn(importButtonScale)}
-          onPressOut={() => handlePressOut(importButtonScale)}
-          onPress={handleImportPress}
-        >
-          <Animated.View style={{ transform: [{ scale: importButtonScale }] }}>
-            <ThemedText style={commonStyles.buttonText}>
-              <Ionicons name="download-outline" size={16} />
-            </ThemedText>
-          </Animated.View>
-        </Pressable>
+        
+        <View style={commonStyles.buttonGroup}>
+          <Pressable
+            onPressIn={() => handlePressIn(refreshButtonScale)}
+            onPressOut={() => handlePressOut(refreshButtonScale)}
+            onPress={refreshCalories}
+            style={commonStyles.iconButton}
+          >
+            <Animated.View style={{ transform: [{ scale: refreshButtonScale }] }}>
+              <Ionicons name="reload" size={20} color={textColor} />
+            </Animated.View>
+          </Pressable>
+          
+          <Pressable
+            onPressIn={() => handlePressIn(mealExportButtonScale)}
+            onPressOut={() => handlePressOut(mealExportButtonScale)}
+            onPress={() => {
+              Alert.alert(
+                'Export Meal',
+                'Select a meal to export:',
+                [
+                  ...mealTypes.map(mealType => ({
+                    text: mealType,
+                    onPress: () => exportMeal(mealType)
+                  })),
+                  { text: 'Cancel', style: 'cancel' }
+                ]
+              );
+            }}
+            style={commonStyles.iconButton}
+          >
+            <Animated.View style={{ transform: [{ scale: mealExportButtonScale }] }}>
+              <Ionicons name="fast-food-outline" size={20} color={textColor} />
+            </Animated.View>
+          </Pressable>
+          
+          <Pressable
+            onPressIn={() => handlePressIn(exportButtonScale)}
+            onPressOut={() => handlePressOut(exportButtonScale)}
+            onPress={exportData}
+            style={commonStyles.iconButton}
+          >
+            <Animated.View style={{ transform: [{ scale: exportButtonScale }] }}>
+              <Ionicons name="cloud-upload-outline" size={20} color={textColor} />
+            </Animated.View>
+          </Pressable>
+          
+          <Pressable
+            onPressIn={() => handlePressIn(importButtonScale)}
+            onPressOut={() => handlePressOut(importButtonScale)}
+            onPress={handleImportPress}
+            style={commonStyles.iconButton}
+          >
+            <Animated.View style={{ transform: [{ scale: importButtonScale }] }}>
+              <Ionicons name="download-outline" size={20} color={textColor} />
+            </Animated.View>
+          </Pressable>
+        </View>
       </ThemedView>
     </ThemedView>
   );

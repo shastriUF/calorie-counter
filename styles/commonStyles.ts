@@ -71,4 +71,30 @@ export const commonStyles = StyleSheet.create({
   suggestionText: {
     padding: 5,
   },
+  topNav: {
+    position: 'absolute',
+    top: 40,
+    left: 10,
+    zIndex: 10,
+  },
+  backButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+  },
+  backButtonContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  backButtonText: {
+    color: '#007BFF',
+    marginLeft: 5,
+    fontSize: 16,
+  },
+  buttonGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  iconButton: {
+    paddingHorizontal: 10,
+  },
 });
